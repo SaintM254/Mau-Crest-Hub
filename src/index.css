@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cream: #FFF8E1;
+  --paper: #FFFFFF;
+  --cream-deep: #F5EBC8;
+  --sand: #E7DDB5;
+  --forest: #1F4D2E;
+  --forest-dark: #163A22;
+  --forest-tint: #E3EFDF;
+  --gold: #B7892B;
+  --gold-tint: #F6E7BF;
+  --deep-blue: #1D4E7A;
+  --blue-tint: #DCE8F3;
+  --ink: #1E2A22;
+  --ink-muted: #596658;
+  --danger: #A8321F;
+  --danger-tint: #F8DFD9;
+  --warning: #8F5200;
+  --warning-tint: #FBE8C2;
+}
+
+html { font-size: 15px; }
+@media (max-width: 767px) { html { font-size: 16px; } }
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: 'Public Sans', system-ui, sans-serif;
+  line-height: 1.5;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.num, td, th, .tabular { font-variant-numeric: tabular-nums; }
+
+*:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+@keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+.skeleton-pulse { animation: pulse-soft 1.6s ease-in-out infinite; }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .print-area { display: block !important; }
+}
+
+/* Receipt 80mm */
+.receipt-print { width: 80mm; font-size: 12px; }
+@media print {
+  .receipt-print { width: 80mm; }
+}
