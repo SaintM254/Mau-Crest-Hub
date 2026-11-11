@@ -3,6 +3,7 @@ import { useAsync, Button, Select, Input, Badge, Alert, PageHeader } from '../..
 import { api } from '../../api';
 import { fmtKES, fmtDate, sum } from '../../lib/utils';
 import { useSession } from '../../lib/store';
+import { can } from '../../lib/permissions';
 import { exportExcel, exportPdf } from '../../lib/export';
 
 const REPORTS = [
@@ -31,8 +32,8 @@ export function ReportsPage() {
   const [to, setTo] = useState('');
 
   if (loading || !data) return <div className="h-40 bg-cream-deep skeleton-pulse rounded-panel" />;
-  const isEntry = user?.role === 'entry';
-  if (isEntry && report === 'pnl') return <Alert tone="danger">You do not have permission to view profit and loss.</Alert>;
+  const canProfit = can(user, 'reports.profit');
+  if (!canProfit && report === 'pnl') return <Alert tone="danger">You do not have permission to view profit and loss.</Alert>;
 
   const range = () => {
     const today = new Date();

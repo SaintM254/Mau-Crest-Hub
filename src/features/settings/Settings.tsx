@@ -4,6 +4,17 @@ import { api } from '../../api';
 import { fmtDate, fmtKES } from '../../lib/utils';
 import { useSession } from '../../lib/store';
 import { resetData } from '../../data/seed';
+import { can, CAPABILITY_LABELS, OWNER_ONLY, type Capability } from '../../lib/permissions';
+
+/** Capabilities shown in the Settings role summary. Mirrors src/lib/permissions.ts. */
+const ROLE_PREVIEW = {
+  owner: [] as string[],
+  manager: [
+    'record.milk', 'record.sales', 'record.health', 'record.attendance', 'edit.any',
+    'payroll.view', 'reports.view', 'reports.profit', 'expenses.record', 'audit.view'
+  ],
+  entry: ['record.milk', 'record.sales', 'record.health', 'record.attendance']
+};
 
 export function SettingsPage() {
   const { user, pushToast, simulateOffline, setSimulateOffline } = useSession();
@@ -18,7 +29,7 @@ export function SettingsPage() {
   const [userForm, setUserForm] = useState<any>({ name: '', email: '', phone: '', role: 'entry', password: 'entry123' });
 
   if (loading || !data) return <div className="h-40 bg-cream-deep skeleton-pulse rounded-panel" />;
-  if (user?.role !== 'owner') return <Alert tone="danger">You do not have permission to view Settings. Settings are for the owner only.</Alert>;
+  if (!can(user, 'settings.manage')) return <Alert tone="danger">You do not have permission to view Settings. Settings are for the owner only.</Alert>;
 
   const s = form || data.settings || {};
   const set = (k: string, v: any) => setForm({ ...s, [k]: v });
@@ -101,6 +112,41 @@ export function SettingsPage() {
               </tbody>
             </table>
           </div>
+          <div className="panel p-4 md:p-5">
+            <h2 className="text-[17px] font-semibold">What each role can do</h2>
+            <p className="text-[13px] text-ink-muted mt-0.5 mb-4">
+              Anyone who signs in sees only the work their role allows. The owner also holds everything the manager holds.
+            </p>
+            <div className="grid gap-3 md:grid-cols-3">
+              {(['owner', 'manager', 'entry'] as const).map(role => {
+                const list = (Object.keys(CAPABILITY_LABELS) as Capability[]).filter(c => {
+                  if (role === 'owner') return true;
+                  return (ROLE_PREVIEW[role] as Capability[]).includes(c);
+                });
+                const count = list.length;
+                return (
+                  <div key={role} className="rounded-panel border border-sand p-3.5 bg-cream">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="font-semibold capitalize text-[15px]">{role === 'entry' ? 'Data entry' : role}</span>
+                      <Badge tone={role === 'owner' ? 'success' : 'neutral'}>{count} permissions</Badge>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {list.map(c => (
+                        <li key={c} className="text-[13px] flex items-start gap-1.5">
+                          <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${OWNER_ONLY.includes(c) ? 'bg-gold' : 'bg-forest'}`} aria-hidden="true" />
+                          <span>{CAPABILITY_LABELS[c]}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[13px] text-ink-muted mt-3">
+              Items marked in gold are owner only and cannot be granted to a manager or data entry user.
+            </p>
+          </div>
+
           <div className="panel p-4 overflow-x-auto">
             <h2 className="text-[17px] font-semibold mb-3">Permission matrix</h2>
             <table className="table-base min-w-[800px]">

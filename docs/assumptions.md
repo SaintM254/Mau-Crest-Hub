@@ -27,3 +27,15 @@ Decisions made where the brief was unclear. Each is easy to change.
 - `Segmented` is used for two to four mutually exclusive choices (milk session, per cow or per batch). Button groups inside forms stay buttons rather than custom radios so keyboard behaviour is native.
 - The sidebar is sticky below the 64px top bar on screens of 768px and wider, which keeps navigation visible on long record pages.
 - A failed automated screenshot check in the build environment was not possible (no browser available); layout was verified by building and by reviewing rendered class output instead.
+
+## 15. Manager sign-in and the owner / manager split (November 2026)
+
+- The demo accounts live in one exported list (`DEMO_USERS` in `src/data/seed.ts`) and are checked on every app start, not only on first load. A browser holding an older copy of the demo data therefore always accepts the three advertised logins. Passwords and emails are restored to the documented values, but a user the owner created is left untouched.
+- The sign-in screen lists the three demo roles as tap targets that fill the form, so the credentials cannot be mistyped.
+- Permissions now come from one place, `src/lib/permissions.ts`, rather than scattered role string comparisons. Components ask `can(user, 'capability')`.
+- **Owner only, and cannot be granted to a manager:** managing users and permissions, changing farm settings and milk prices, creating and restoring backups, resetting demo data, and deleting records.
+- **Manager:** records milk, sales, health and attendance; edits any record; views payroll and salaries; views all reports including profit and loss; records expenses; reads the audit log.
+- **Data entry:** records milk, sales, health and attendance only. No payroll, no profit and loss, no audit log, no delete.
+- Payroll approval was moved from manager to owner, because approving a run posts a cost to expenses. A manager sees a note explaining they can review but not approve.
+- The owner sees every fine grained permission in Settings > Users and permissions, with owner-only items marked in gold. The dashboard shows a short plain-English summary of the signed-in role's limits.
+- Dashboard quick actions sit on their own row, right aligned to the content edge, rather than crowding the greeting.
