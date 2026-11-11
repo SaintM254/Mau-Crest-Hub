@@ -32,12 +32,12 @@ export function SignIn() {
         <div>
           <h1 className="text-[32px] font-bold leading-tight mb-2">{en.appName}</h1>
           <p className="text-[17px] text-cream/85">{en.slogan}</p>
-          <p className="mt-6 text-[15px] text-cream/70 max-w-md">Farm management and milk sales for Mau Crest Dairies. Livestock, milk, sales, health and labour in one place.</p>
+          <p className="mt-6 text-[15px] text-cream/80 max-w-md">Farm management and milk sales for Mau Crest Dairies. Livestock, milk, sales, health and labour in one place.</p>
         </div>
-        <p className="text-[13px] text-cream/60">Demo version. Data is stored on this device only.</p>
+        <p className="text-[13px] text-cream/75">Demo version. Data is stored on this device only.</p>
       </div>
-      <div className="bg-cream p-8 md:p-12 flex items-center justify-center">
-        <div className="w-full max-w-sm">
+      <div className="bg-cream p-6 md:p-12 flex items-center justify-center">
+        <div className="w-full max-w-sm bg-paper border border-sand rounded-panel p-6 md:p-7">
           {forgot ? (
             <div>
               <h2 className="text-[24px] font-bold mb-4">Reset password</h2>
@@ -49,7 +49,7 @@ export function SignIn() {
                   <Button type="submit" className="w-full">Send reset link</Button>
                 </form>
               )}
-              <button className="mt-4 text-forest font-semibold min-h-[44px]" onClick={() => setForgot(false)}>Back to sign in</button>
+              <button className="mt-4 text-forest font-semibold min-h-[44px] underline underline-offset-2" onClick={() => setForgot(false)}>Back to sign in</button>
             </div>
           ) : (
             <div>

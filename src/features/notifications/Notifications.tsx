@@ -35,7 +35,7 @@ export function NotificationsPage() {
             ))}
           </div>
           {filtered.map(n => (
-            <div key={n.id} className={`panel p-4 flex gap-3 ${n.read ? 'opacity-70' : ''}`}>
+            <div key={n.id} className={`panel p-4 flex gap-3 ${n.read ? 'bg-cream' : ''}`}>
               <div className="flex-1">
                 <div className="flex items-center gap-2"><span className="font-semibold text-[15px]">{n.title}</span><Badge tone={n.category === 'health' ? 'warning' : n.category === 'sales' ? 'info' : 'neutral'}>{n.category}</Badge>{!n.read && <Badge tone="gold">Unread</Badge>}</div>
                 <p className="text-[15px] text-ink-muted">{n.body}</p>

@@ -122,7 +122,7 @@ export function HealthPage() {
           <Input label="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           <div>
             <span className="block text-[15px] font-medium mb-1">Animals (search and tick)</span>
-            <input value={searchAnimal} onChange={(e) => setSearchAnimal(e.target.value)} placeholder="Search tag or name" className="w-full min-h-[44px] px-3 rounded-input border border-sand bg-paper text-[15px] mb-2" />
+            <input value={searchAnimal} onChange={(e) => setSearchAnimal(e.target.value)} placeholder="Search tag or name" className="w-full min-h-[44px] px-3 rounded-input border border-sand bg-cream text-[15px] mb-2" />
             <div className="max-h-40 overflow-y-auto border border-sand rounded-panel p-2">
               {data.animals.filter(a => a.status === 'active' && (a.tag.toLowerCase().includes(searchAnimal.toLowerCase()) || a.name.toLowerCase().includes(searchAnimal.toLowerCase()))).slice(0, 30).map(a => (
                 <label key={a.id} className="flex items-center gap-2 min-h-[44px] px-2 cursor-pointer">

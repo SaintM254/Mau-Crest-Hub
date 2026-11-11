@@ -49,7 +49,7 @@ body {
 .skeleton-pulse { animation: pulse-soft 1.6s ease-in-out infinite; }
 
 @layer components {
-  /* Panels */
+  /* ---------------------------------- Panels -------------------------------- */
   .panel {
     @apply bg-paper border border-sand rounded-panel;
   }
@@ -60,13 +60,13 @@ body {
     @apply flex items-start justify-between gap-3 mb-4;
   }
   .panel-title {
-    @apply text-[17px] font-semibold text-ink;
+    @apply text-[17px] font-semibold text-ink leading-snug;
   }
   .panel-sub {
     @apply text-[13px] text-ink-muted mt-0.5;
   }
 
-  /* Tables */
+  /* ---------------------------------- Tables -------------------------------- */
   .table-wrap {
     @apply panel overflow-x-auto;
   }
@@ -87,7 +87,7 @@ body {
     @apply bg-cream-deep/50;
   }
 
-  /* Page skeleton */
+  /* ---------------------------------- Page ---------------------------------- */
   .page-title {
     @apply text-[24px] font-bold text-ink leading-tight;
   }
@@ -96,6 +96,25 @@ body {
   }
   .section-title {
     @apply text-[17px] font-semibold text-ink;
+  }
+
+  /* ------------------------------ Icon buttons ------------------------------ */
+  /* Round, flat, cream by default. Used in the top bar and panel corners. */
+  .icon-btn {
+    @apply inline-flex items-center justify-center rounded-full border border-sand bg-paper text-ink
+           min-w-[40px] min-h-[40px] transition-colors duration-150
+           hover:bg-cream hover:border-sand;
+  }
+  .icon-btn-dark {
+    @apply inline-flex items-center justify-center rounded-full border border-cream/25 text-cream
+           min-w-[40px] min-h-[40px] transition-colors duration-150 hover:bg-forest-dark;
+  }
+
+  /* --------------------------------- Inputs --------------------------------- */
+  .field {
+    @apply w-full min-h-[44px] px-3.5 py-2 rounded-input border border-sand bg-cream text-[15px] text-ink
+           placeholder:text-ink-muted/70 transition-colors duration-150
+           hover:border-sand focus:border-forest focus:bg-paper;
   }
 }
 

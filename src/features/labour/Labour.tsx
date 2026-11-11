@@ -76,7 +76,7 @@ export function LabourPage() {
                   <div key={e.id} className="flex flex-wrap items-center gap-2 border-b border-sand pb-2">
                     <span className="w-48 text-[15px] font-medium">{e.name}</span>
                     {(['present', 'absent', 'leave', 'half'] as const).map(s => (
-                      <button key={s} onClick={() => setMarks({ ...marks, [e.id]: s })} className={`min-h-[44px] px-3 rounded-input border capitalize text-[15px] ${val === s ? 'bg-forest text-cream border-forest' : 'bg-paper border-sand'}`}>{s}</button>
+                      <button key={s} onClick={() => setMarks({ ...marks, [e.id]: s })} className={`min-h-[42px] px-4 rounded-pill border capitalize text-[15px] transition-colors duration-150 ${val === s ? 'bg-forest text-cream border-forest font-semibold' : 'bg-cream border-sand text-ink hover:bg-cream-deep'}`}>{s}</button>
                     ))}
                   </div>
                 );

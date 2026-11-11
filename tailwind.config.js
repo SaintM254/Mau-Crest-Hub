@@ -27,9 +27,13 @@ export default {
         sans: ['Public Sans', 'system-ui', 'sans-serif']
       },
       borderRadius: {
-        input: '6px',
-        panel: '10px',
-        dialog: '12px'
+        input: '10px',
+        panel: '16px',
+        dialog: '20px',
+        pill: '999px'
+      },
+      boxShadow: {
+        none: 'none'
       }
     }
   },

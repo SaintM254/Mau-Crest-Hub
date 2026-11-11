@@ -115,7 +115,7 @@ export function MilkPage() {
                     return (
                       <tr key={a.id}>
                         <td><span className="font-medium">{a.tag} — {a.name}</span>{inWd && <span className="ml-2"><Badge tone="warning">In withdrawal</Badge></span>}</td>
-                        <td><input inputMode="decimal" type="number" step="any" min="0" value={perCow[a.id] || ''} onChange={(e) => setPerCow({ ...perCow, [a.id]: e.target.value })} className="w-32 min-h-[44px] px-3 rounded-input border border-sand bg-paper text-[15px] num" aria-label={`Litres for ${a.tag}`} /></td>
+                        <td><input inputMode="decimal" type="number" step="any" min="0" value={perCow[a.id] || ''} onChange={(e) => setPerCow({ ...perCow, [a.id]: e.target.value })} className="w-32 min-h-[44px] px-3 rounded-input border border-sand bg-cream text-[15px] num" aria-label={`Litres for ${a.tag}`} /></td>
                         <td className="text-[13px] text-ink-muted">{inWd ? 'Milk from this cow is not sold.' : ''}</td>
                       </tr>
                     );
