@@ -21,10 +21,48 @@ const NAMES = ['Amani', 'Baraka', 'Chepkoech', 'Neema', 'Zawadi', 'Wanjiku', 'Ma
 const BREEDS = ['Friesian', 'Friesian', 'Friesian', 'Friesian', 'Ayrshire', 'Jersey', 'Guernsey', 'Friesian-Jersey cross'];
 const COLORS = ['#1F4D2E', '#B7892B', '#1D4E7A', '#8F5200', '#596658', '#A8321F'];
 
+/** The demo accounts. Kept in one place so a stale database can always sign in. */
+export const DEMO_USERS: User[] = [
+  { id: 'u1', name: 'Peter Kinyanjui', email: 'owner@maucrest.co.ke', phone: '0712 345 678', role: 'owner', password: 'owner123', active: true },
+  { id: 'u2', name: 'Samuel Kiprono', email: 'samuel@maucrest.co.ke', phone: '0722 456 789', role: 'manager', password: 'manager123', active: true },
+  { id: 'u3', name: 'Grace Wanjiru', email: 'grace@maucrest.co.ke', phone: '0733 567 890', role: 'manager', password: 'manager123', active: true },
+  { id: 'u4', name: 'Daniel Kipchirchir', email: 'daniel@maucrest.co.ke', phone: '0744 678 901', role: 'entry', password: 'entry123', active: true },
+  { id: 'u5', name: 'Faith Chebet', email: 'faith@maucrest.co.ke', phone: '0755 789 012', role: 'entry', password: 'entry123', active: true },
+  { id: 'u6', name: 'Brian Otieno', email: 'brian@maucrest.co.ke', phone: '0766 890 123', role: 'entry', password: 'entry123', active: true },
+  { id: 'u7', name: 'Mercy Njeri', email: 'mercy@maucrest.co.ke', phone: '0777 901 234', role: 'entry', password: 'entry123', active: true },
+  { id: 'u8', name: 'Agnes Wambui', email: 'agnes@maucrest.co.ke', phone: '0788 012 345', role: 'entry', password: 'entry123', active: true }
+];
+
+/**
+ * Make sure every demo account exists with the documented password.
+ * Runs on every app start, not only first load, so a browser holding an older
+ * copy of the demo data can still sign in as owner, manager or data entry.
+ */
+export async function syncDemoUsers() {
+  for (const u of DEMO_USERS) {
+    const existing = await db.users.get(u.id);
+    if (!existing) {
+      await db.users.add(u);
+      continue;
+    }
+    if (existing.password !== u.password || existing.email !== u.email || existing.active !== true) {
+      await db.users.put({ ...existing, email: u.email, phone: u.phone, password: u.password, role: u.role, active: true });
+    }
+  }
+  // If no user rows at all exist (cleared database), restore the full set.
+  if ((await db.users.count()) === 0) {
+    await db.users.bulkAdd(DEMO_USERS);
+  }
+}
+
 export async function seedIfEmpty() {
   const count = await db.animals.count();
-  if (count > 0) return;
+  if (count > 0) {
+    await syncDemoUsers();
+    return;
+  }
   await seedAll();
+  await syncDemoUsers();
 }
 
 export async function resetData() {
@@ -40,17 +78,8 @@ export async function resetData() {
 }
 
 async function seedAll() {
-  const users: User[] = [
-    { id: 'u1', name: 'Peter Kinyanjui', email: 'owner@maucrest.co.ke', phone: '0712 345 678', role: 'owner', password: 'owner123', active: true },
-    { id: 'u2', name: 'Samuel Kiprono', email: 'samuel@maucrest.co.ke', phone: '0722 456 789', role: 'manager', password: 'manager123', active: true },
-    { id: 'u3', name: 'Grace Wanjiru', email: 'grace@maucrest.co.ke', phone: '0733 567 890', role: 'manager', password: 'manager123', active: true },
-    { id: 'u4', name: 'Daniel Kipchirchir', email: 'daniel@maucrest.co.ke', phone: '0744 678 901', role: 'entry', password: 'entry123', active: true },
-    { id: 'u5', name: 'Faith Chebet', email: 'faith@maucrest.co.ke', phone: '0755 789 012', role: 'entry', password: 'entry123', active: true },
-    { id: 'u6', name: 'Brian Otieno', email: 'brian@maucrest.co.ke', phone: '0766 890 123', role: 'entry', password: 'entry123', active: true },
-    { id: 'u7', name: 'Mercy Njeri', email: 'mercy@maucrest.co.ke', phone: '0777 901 234', role: 'entry', password: 'entry123', active: true },
-    { id: 'u8', name: 'Agnes Wambui', email: 'agnes@maucrest.co.ke', phone: '0788 012 345', role: 'entry', password: 'entry123', active: true }
-  ];
-  await db.users.bulkAdd(users);
+  const users: User[] = DEMO_USERS;
+  await db.users.bulkAdd(DEMO_USERS);
 
   const empData: [string, string, number][] = [
     ['Samuel Kiprono', 'Farm manager', 55000], ['Grace Wanjiru', 'Accounts and sales', 48000],

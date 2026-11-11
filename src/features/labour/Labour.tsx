@@ -3,6 +3,7 @@ import { useAsync, Button, Input, Select, Dialog, Badge, Tabs, EmptyState, Alert
 import { api } from '../../api';
 import { fmtKES, fmtDate, todayISO, sum } from '../../lib/utils';
 import { useSession } from '../../lib/store';
+import { can } from '../../lib/permissions';
 import { exportExcel, printArea } from '../../lib/export';
 
 export function LabourPage() {
@@ -142,6 +143,11 @@ export function LabourPage() {
       {tab === 'payroll' && (
         isEntry ? <Alert tone="danger">You do not have permission to view payroll. Payroll is visible to owners and managers only.</Alert> : (
           <div className="space-y-3">
+            {!can(user, 'payroll.approve') && (
+              <Alert tone="info">
+                You can review payroll and see every figure, but only the owner can approve a run and post it to expenses.
+              </Alert>
+            )}
             {data.payroll.map(run => (
               <div key={run.id} className="panel p-4">
                 <div className="flex flex-wrap items-center gap-3">
@@ -150,7 +156,9 @@ export function LabourPage() {
                   <span className="num text-[15px]">Net total: {fmtKES(sum(run.lines.map(l => l.net)))}</span>
                   <div className="flex-1" />
                   <Button variant="secondary" onClick={() => setSelectedRun(run)}>Review</Button>
-                  {run.status === 'draft' && <Button onClick={() => approvePayroll(run)}>Approve and add to expenses</Button>}
+                  {run.status === 'draft' && can(user, 'payroll.approve') && (
+                    <Button onClick={() => approvePayroll(run)}>Approve and add to expenses</Button>
+                  )}
                 </div>
               </div>
             ))}

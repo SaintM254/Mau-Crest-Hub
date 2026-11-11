@@ -3,6 +3,7 @@ import { useAsync, Button, Dialog, SearchBar, Select, Alert, Pagination, PageHea
 import { api } from '../../api';
 import { fmtDateTime } from '../../lib/utils';
 import { useSession } from '../../lib/store';
+import { can } from '../../lib/permissions';
 
 export function AuditPage() {
   const { user } = useSession();
@@ -13,7 +14,7 @@ export function AuditPage() {
   const [selected, setSelected] = useState<any>(null);
 
   if (loading || !data) return <div className="h-40 bg-cream-deep skeleton-pulse rounded-panel" />;
-  if (user?.role === 'entry') return <Alert tone="danger">You do not have permission to view the audit log.</Alert>;
+  if (!can(user, 'audit.view')) return <Alert tone="danger">You do not have permission to view the audit log.</Alert>;
 
   const modules = [...new Set(data.map(a => a.module))];
   const filtered = data.filter(a => (module === 'all' || a.module === module) && (a.user.toLowerCase().includes(q.toLowerCase()) || a.record.toLowerCase().includes(q.toLowerCase())));

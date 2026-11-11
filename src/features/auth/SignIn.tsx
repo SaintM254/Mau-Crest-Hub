@@ -26,18 +26,10 @@ export function SignIn() {
   };
 
   return (
-    <div className="min-h-screen grid md:grid-cols-2">
-      <div className="bg-forest text-cream p-8 md:p-12 flex flex-col justify-between">
-        <LogoWithText dark />
-        <div>
-          <h1 className="text-[32px] font-bold leading-tight mb-2">{en.appName}</h1>
-          <p className="text-[17px] text-cream/85">{en.slogan}</p>
-          <p className="mt-6 text-[15px] text-cream/80 max-w-md">Farm management and milk sales for Mau Crest Dairies. Livestock, milk, sales, health and labour in one place.</p>
-        </div>
-        <p className="text-[13px] text-cream/75">Demo version. Data is stored on this device only.</p>
-      </div>
-      <div className="bg-cream p-6 md:p-12 flex items-center justify-center">
-        <div className="w-full max-w-sm bg-paper border border-sand rounded-panel p-6 md:p-7">
+    <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+        <div className="bg-paper border border-sand rounded-panel p-6 md:p-8">
+        <div className="flex justify-center mb-6"><LogoWithText /></div>
           {forgot ? (
             <div>
               <h2 className="text-[24px] font-bold mb-4">Reset password</h2>
@@ -68,11 +60,26 @@ export function SignIn() {
                 <Button type="submit" className="w-full">{en.auth.signIn}</Button>
               </form>
               <button className="mt-4 text-forest font-semibold min-h-[44px]" onClick={() => setForgot(true)}>{en.auth.forgot}</button>
-              <div className="mt-6 border border-sand rounded-panel bg-paper p-4 text-[13px] text-ink-muted">
-                <div className="font-semibold text-ink mb-1">Demo logins</div>
-                <div>Owner: owner@maucrest.co.ke / owner123</div>
-                <div>Manager: samuel@maucrest.co.ke / manager123</div>
-                <div>Data entry: daniel@maucrest.co.ke / entry123</div>
+              <div className="mt-6 rounded-panel bg-cream border border-sand p-4">
+                <div className="text-[13px] font-semibold text-ink mb-2">Demo logins</div>
+                <div className="space-y-1.5 text-[13px]">
+                  {[
+                    { role: 'Owner', email: 'owner@maucrest.co.ke', pass: 'owner123' },
+                    { role: 'Manager', email: 'samuel@maucrest.co.ke', pass: 'manager123' },
+                    { role: 'Data entry', email: 'daniel@maucrest.co.ke', pass: 'entry123' }
+                  ].map(d => (
+                    <button
+                      key={d.role}
+                      type="button"
+                      onClick={() => { setId(d.email); setPassword(d.pass); setError(''); }}
+                      className="w-full text-left flex items-center justify-between gap-2 rounded-input px-2 py-1.5 hover:bg-cream-deep transition-colors duration-150"
+                    >
+                      <span className="text-ink-muted">{d.role}</span>
+                      <span className="num text-ink">{d.pass}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[13px] text-ink-muted mt-2">Tap a role to fill the form.</p>
               </div>
             </div>
           )}

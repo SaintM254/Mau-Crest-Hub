@@ -4,6 +4,7 @@ import { Milk, ShoppingCart, HeartPulse, ClipboardCheck, TrendingUp, TrendingDow
 import { useAsync, Stat, StatSkeletonGrid, Panel, Alert, StatusPill, Button, Badge } from '../../components/ui';
 import { api } from '../../api';
 import { CowIcon } from '../../components/ui/CowIcon';
+import { can } from '../../lib/permissions';
 import { fmtKES, fmtL, fmtDate, fmtDateTime, todayISO, sum } from '../../lib/utils';
 import { useSession } from '../../lib/store';
 import { format, subDays } from 'date-fns';
@@ -85,7 +86,7 @@ export function Dashboard() {
     total: sum(salesToday.filter(s => s.paymentMethod === m).map(s => s.total))
   }));
 
-  const isEntry = user?.role === 'entry';
+  const isEntry = !can(user, 'reports.profit');
   const firstName = user?.name.split(' ')[0] ?? '';
 
   const quickActions = [
@@ -98,14 +99,16 @@ export function Dashboard() {
   return (
     <div className="space-y-5">
       {/* Welcome row */}
-      <header className="flex flex-wrap items-start justify-between gap-3">
+      <header>
         <div className="min-w-0">
-          <h1 className="text-[32px] font-bold text-ink leading-tight">
+          <h1 className="text-[28px] md:text-[32px] font-bold text-ink leading-tight">
             Welcome back, <span className="text-ink-muted font-medium">{firstName}</span>
           </h1>
           <p className="page-sub">{fmtDate(today)} · Mau Crest Dairies, Molo, Nakuru County</p>
         </div>
-        <div className="flex flex-wrap gap-2 shrink-0">
+
+        {/* Quick actions: one bundle, right aligned to the content edge */}
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
           {quickActions.map(a => (
             <Button
               key={a.label}
@@ -183,6 +186,13 @@ export function Dashboard() {
       {isEntry && (
         <Alert tone="info" title="Data entry role">
           You can record milk, sales, health and attendance. Payroll, profit and loss, and the audit log are hidden for your role.
+        </Alert>
+      )}
+
+      {user?.role === 'manager' && (
+        <Alert tone="info" title="Manager role">
+          You can record and edit farm work, see reports and approve payroll. Changing prices, managing users, backups and deleting
+          permanent records are owner only.
         </Alert>
       )}
 
