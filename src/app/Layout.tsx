@@ -177,7 +177,7 @@ export function Layout() {
           </button>
           <div className="md:hidden"><LogoWithText compact /></div>
 
-          <div className="hidden md:flex flex-1 max-w-md relative">
+          <div className="hidden md:flex w-full max-w-md mr-auto relative">
             <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" aria-hidden="true" />
             <input
               value={search}
@@ -203,7 +203,8 @@ export function Layout() {
             )}
           </div>
 
-          <div className="flex-1 md:hidden" />
+          {/* Everything below is pinned to the right edge of the bar */}
+          <div className="ml-auto flex items-center gap-2">
 
           <div className="hidden sm:block">
             <Badge tone={isOnline ? 'success' : 'warning'}>
@@ -266,6 +267,7 @@ export function Layout() {
             </span>
             <span className="hidden lg:inline">{user?.name.split(' ')[0]}</span>
           </button>
+          </div>
         </div>
       </header>
 

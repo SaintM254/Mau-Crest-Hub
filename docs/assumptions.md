@@ -39,3 +39,12 @@ Decisions made where the brief was unclear. Each is easy to change.
 - Payroll approval was moved from manager to owner, because approving a run posts a cost to expenses. A manager sees a note explaining they can review but not approve.
 - The owner sees every fine grained permission in Settings > Users and permissions, with owner-only items marked in gold. The dashboard shows a short plain-English summary of the signed-in role's limits.
 - Dashboard quick actions sit on their own row, right aligned to the content edge, rather than crowding the greeting.
+
+## 16. Layout corrections (November 2026)
+
+- Top bar controls (connection chip, notifications, help, sign out, account) are pinned to the right edge in one group. The search field takes the left side with `mr-auto` rather than being stretched, so the right group always ends flush with the content edge on wide screens.
+- The session picker in Milk no longer shows a "saved" marker, because the extra word overflowed the pill. A session that already has a record still shows at 100% in the History tab.
+- Segmented labels truncate inside the pill instead of spilling over the next control, so no label can overlap an adjacent field.
+- Receipt actions (Print, Send by SMS, Send by email) sit in the panel header, right aligned, and never inside the printed receipt. The printed area is the receipt only.
+- The receipt body uses a definition list with a fixed label column and a right aligned value column. A long customer name wraps inside the card instead of running past the border. On screen the card is capped at 80mm and centred; in print the border and padding are removed and the width is exactly 80mm.
+- The sales list sorts by date, then by record id which is creation ordered, and lifts the sale just recorded to the top. Recording a sale therefore always shows it first, even if the system clock moved backwards.
