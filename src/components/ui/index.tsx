@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, AlertCircle, CheckCircle2, Info, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, AlertCircle, CheckCircle2, Info, Search, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { useSession } from '../../lib/store';
 
 /* ---------------------------------- Buttons --------------------------------- */
@@ -15,41 +15,34 @@ export function Button({
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: ButtonSize }) {
   const variants: Record<ButtonVariant, string> = {
     primary: 'bg-forest text-cream border border-forest hover:bg-forest-dark hover:border-forest-dark',
-    secondary: 'bg-paper text-ink border border-sand hover:bg-cream-deep hover:border-sand',
-    danger: 'bg-paper text-danger border border-danger/40 hover:bg-danger-tint',
+    secondary: 'bg-paper text-ink border border-sand hover:bg-cream hover:border-sand',
+    danger: 'bg-paper text-danger border border-danger/45 hover:bg-danger-tint',
     ghost: 'bg-transparent text-forest border border-transparent hover:bg-forest-tint',
-    gold: 'bg-gold-tint text-gold-dark border border-gold/40 hover:bg-gold/25'
+    gold: 'bg-gold-tint text-gold-dark border border-gold/40 hover:bg-gold/20'
   };
   const sizes: Record<ButtonSize, string> = {
-    md: 'min-h-[44px] px-4 py-2 text-[15px]',
-    sm: 'min-h-[38px] px-3 py-1.5 text-[13px]'
+    md: 'min-h-[44px] px-5 py-2 text-[15px]',
+    sm: 'min-h-[38px] px-4 py-1.5 text-[13px]'
   };
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-input font-semibold whitespace-nowrap
-        transition-colors duration-150 disabled:opacity-45 disabled:pointer-events-none
+      className={`inline-flex items-center justify-center gap-2 rounded-pill font-semibold whitespace-nowrap
+        transition-colors duration-150 disabled:bg-cream-deep disabled:text-ink-muted
+        disabled:border-sand disabled:pointer-events-none
         ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     />
   );
 }
 
+/** Round flat icon button. Cream fill on paper, so it never reads as faded. */
 export function IconButton({ className = '', ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      className={`min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-input
-        text-ink-muted hover:text-ink hover:bg-cream-deep transition-colors duration-150 ${className}`}
-      {...props}
-    />
-  );
+  return <button className={`icon-btn ${className}`} {...props} />;
 }
 
 /* ----------------------------------- Forms ---------------------------------- */
 
-const fieldLabel = 'block text-[15px] font-medium text-ink mb-1';
-const fieldBase =
-  'w-full min-h-[44px] px-3 py-2 rounded-input border bg-paper text-[15px] text-ink ' +
-  'placeholder:text-ink-muted/70 transition-colors duration-150';
+const fieldLabel = 'block text-[15px] font-medium text-ink mb-1.5';
 
 export function Input({
   label, hint, error, className = '', ...props
@@ -59,7 +52,7 @@ export function Input({
       {label && <span className={fieldLabel}>{label}</span>}
       <input
         aria-invalid={!!error}
-        className={`${fieldBase} ${error ? 'border-danger' : 'border-sand hover:border-sand focus:border-forest'} ${className}`}
+        className={`field ${error ? 'border-danger' : ''} ${className}`}
         {...props}
       />
       {hint && !error && <span className="block text-[13px] text-ink-muted mt-1">{hint}</span>}
@@ -85,10 +78,7 @@ export function Select({
   return (
     <label className="block">
       {label && <span className={fieldLabel}>{label}</span>}
-      <select
-        className={`${fieldBase} border-sand hover:border-sand focus:border-forest pr-8 ${className}`}
-        {...props}
-      >
+      <select className={`field pr-9 ${className}`} {...props}>
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </label>
@@ -101,11 +91,7 @@ export function Textarea({
   return (
     <label className="block">
       {label && <span className={fieldLabel}>{label}</span>}
-      <textarea
-        className={`${fieldBase} border-sand hover:border-sand focus:border-forest leading-relaxed ${className}`}
-        rows={3}
-        {...props}
-      />
+      <textarea className={`field leading-relaxed ${className}`} rows={3} {...props} />
     </label>
   );
 }
@@ -134,7 +120,7 @@ export function Tabs({
   tabs, active, onChange
 }: { tabs: { id: string; label: string }[]; active: string; onChange: (id: string) => void }) {
   return (
-    <div className="flex gap-1 border-b border-sand overflow-x-auto no-scrollbar" role="tablist">
+    <div className="flex gap-1.5 overflow-x-auto no-scrollbar p-1.5 bg-paper border border-sand rounded-pill" role="tablist">
       {tabs.map(t => {
         const isActive = active === t.id;
         return (
@@ -143,11 +129,11 @@ export function Tabs({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(t.id)}
-            className={`min-h-[44px] px-4 text-[15px] font-semibold whitespace-nowrap border-b-2 -mb-px
+            className={`min-h-[40px] px-4 rounded-pill text-[15px] font-semibold whitespace-nowrap
               transition-colors duration-150 ${
                 isActive
-                  ? 'border-forest text-forest'
-                  : 'border-transparent text-ink-muted hover:text-ink hover:border-sand'
+                  ? 'bg-forest text-cream'
+                  : 'bg-transparent text-ink-muted hover:bg-cream-deep hover:text-ink'
               }`}
           >
             {t.label}
@@ -162,38 +148,37 @@ export function Tabs({
 
 export type BadgeTone = 'neutral' | 'success' | 'info' | 'danger' | 'warning' | 'gold';
 
+const badgeTone: Record<BadgeTone, string> = {
+  neutral: 'bg-cream-deep text-ink',
+  success: 'bg-forest-tint text-forest',
+  info: 'bg-blue-tint text-deep-blue',
+  danger: 'bg-danger-tint text-danger',
+  warning: 'bg-warning-tint text-warning',
+  gold: 'bg-gold-tint text-gold-dark'
+};
+
+const dotTone: Record<BadgeTone, string> = {
+  neutral: 'bg-ink-muted',
+  success: 'bg-forest',
+  info: 'bg-deep-blue',
+  danger: 'bg-danger',
+  warning: 'bg-warning',
+  gold: 'bg-gold'
+};
+
 export function Badge({ tone = 'neutral', children }: { tone?: BadgeTone; children: React.ReactNode }) {
-  const map: Record<BadgeTone, string> = {
-    neutral: 'bg-cream-deep text-ink border-sand',
-    success: 'bg-forest-tint text-forest border-forest/25',
-    info: 'bg-blue-tint text-deep-blue border-deep-blue/25',
-    danger: 'bg-danger-tint text-danger border-danger/25',
-    warning: 'bg-warning-tint text-warning border-warning/25',
-    gold: 'bg-gold-tint text-gold-dark border-gold/30'
-  };
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[13px] font-medium
-        border whitespace-nowrap ${map[tone]}`}
-    >
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-pill text-[13px] font-medium whitespace-nowrap ${badgeTone[tone]}`}>
       {children}
     </span>
   );
 }
 
-/** Small status dot plus label, so status is never conveyed by colour alone. */
+/** Status pill: dot plus text, so status is never carried by colour alone. */
 export function StatusPill({ tone, children }: { tone: BadgeTone; children: React.ReactNode }) {
-  const dot: Record<BadgeTone, string> = {
-    neutral: 'bg-ink-muted',
-    success: 'bg-forest',
-    info: 'bg-deep-blue',
-    danger: 'bg-danger',
-    warning: 'bg-warning',
-    gold: 'bg-gold'
-  };
   return (
     <Badge tone={tone}>
-      <span className={`w-1.5 h-1.5 rounded-full ${dot[tone]}`} aria-hidden="true" />
+      <span className={`w-1.5 h-1.5 rounded-full ${dotTone[tone]}`} aria-hidden="true" />
       {children}
     </Badge>
   );
@@ -224,7 +209,7 @@ export function Dialog({
             <h2 className="text-[20px] font-bold text-ink leading-tight">{title}</h2>
             {description && <p className="text-[13px] text-ink-muted mt-1">{description}</p>}
           </div>
-          <IconButton onClick={onClose} aria-label="Close"><X size={20} /></IconButton>
+          <IconButton onClick={onClose} aria-label="Close"><X size={18} /></IconButton>
         </div>
         <div className="px-5 py-4 overflow-y-auto">{children}</div>
       </div>
@@ -242,7 +227,7 @@ export function Sheet({
       <div className="absolute bottom-0 left-0 right-0 bg-paper rounded-t-dialog border-t border-sand max-h-[85vh] flex flex-col">
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-sand">
           <h2 className="text-[20px] font-bold text-ink">{title}</h2>
-          <IconButton onClick={onClose} aria-label="Close"><X size={20} /></IconButton>
+          <IconButton onClick={onClose} aria-label="Close"><X size={18} /></IconButton>
         </div>
         <div className="px-5 py-4 overflow-y-auto">{children}</div>
       </div>
@@ -250,8 +235,12 @@ export function Sheet({
   );
 }
 
+/**
+ * Explicit yes or no confirmation. Used for sign out and other
+ * actions that cannot be undone by simply navigating back.
+ */
 export function ConfirmDialog({
-  open, onClose, onConfirm, title, body, confirmLabel = 'Confirm'
+  open, onClose, onConfirm, title, body, confirmLabel = 'Yes, continue', cancelLabel = 'No, go back', tone = 'default'
 }: {
   open: boolean;
   onClose: () => void;
@@ -259,13 +248,15 @@ export function ConfirmDialog({
   title: string;
   body: string;
   confirmLabel?: string;
+  cancelLabel?: string;
+  tone?: 'default' | 'danger';
 }) {
   return (
     <Dialog open={open} onClose={onClose} title={title}>
       <p className="text-[15px] text-ink mb-5">{body}</p>
-      <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
-        <Button variant="secondary" onClick={onClose}>Cancel</Button>
-        <Button variant="danger" onClick={onConfirm}>{confirmLabel}</Button>
+      <div className="flex flex-col-reverse sm:flex-row gap-2.5 sm:justify-end">
+        <Button variant="secondary" onClick={onClose}>{cancelLabel}</Button>
+        <Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm}>{confirmLabel}</Button>
       </div>
     </Dialog>
   );
@@ -280,16 +271,16 @@ export function Toasts() {
       {toasts.map(t => (
         <div
           key={t.id}
-          className="bg-forest text-cream px-4 py-3 rounded-panel flex items-start gap-2 border border-forest-dark"
+          className="bg-forest text-cream px-4 py-3 rounded-pill flex items-center gap-2 border border-forest-dark"
         >
-          <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
+          <CheckCircle2 size={18} className="shrink-0" />
           <span className="text-[15px] flex-1">{t.msg}</span>
           <button
             onClick={() => removeToast(t.id)}
             aria-label="Dismiss"
-            className="min-w-[24px] min-h-[24px] inline-flex items-center justify-center hover:opacity-80"
+            className="min-w-[28px] min-h-[28px] inline-flex items-center justify-center rounded-full hover:bg-forest-dark"
           >
-            <X size={16} />
+            <X size={15} />
           </button>
         </div>
       ))}
@@ -304,7 +295,9 @@ export function EmptyState({
 }: { title: string; body: string; action?: React.ReactNode }) {
   return (
     <div className="text-center py-12 px-6 border border-dashed border-sand rounded-panel bg-paper">
-      <Info size={28} className="mx-auto text-ink-muted mb-3" aria-hidden="true" />
+      <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-cream mb-3">
+        <Info size={22} className="text-ink-muted" aria-hidden="true" />
+      </span>
       <h3 className="text-[17px] font-semibold text-ink mb-1">{title}</h3>
       <p className="text-[15px] text-ink-muted max-w-md mx-auto mb-4">{body}</p>
       {action}
@@ -396,8 +389,16 @@ export function Stat({
   return (
     <div className={`border rounded-panel p-4 ${tones[tone]}`}>
       <div className="flex items-start justify-between gap-2">
-        <div className="text-[13px] text-ink-muted font-medium">{label}</div>
-        {icon && <span className="text-ink-muted shrink-0" aria-hidden="true">{icon}</span>}
+        <div className="text-[13px] text-ink-muted font-medium leading-snug">{label}</div>
+        {icon && (
+          <span
+            className={`shrink-0 w-9 h-9 rounded-full inline-flex items-center justify-center
+              ${tone === 'default' ? 'bg-cream text-ink-muted' : 'bg-paper text-ink-muted'}`}
+            aria-hidden="true"
+          >
+            {icon}
+          </span>
+        )}
       </div>
       <div className="text-[24px] font-bold text-ink num leading-tight mt-1">{value}</div>
       {sub && <div className="text-[13px] text-ink-muted mt-0.5">{sub}</div>}
@@ -457,14 +458,15 @@ export function Alert({
   tone = 'info', title, children
 }: { tone?: 'info' | 'warning' | 'danger' | 'success'; title?: string; children: React.ReactNode }) {
   const map: Record<string, string> = {
-    info: 'bg-blue-tint text-deep-blue border-deep-blue/25',
-    warning: 'bg-warning-tint text-warning border-warning/25',
-    danger: 'bg-danger-tint text-danger border-danger/25',
-    success: 'bg-forest-tint text-forest border-forest/25'
+    info: 'bg-blue-tint text-deep-blue',
+    warning: 'bg-warning-tint text-warning',
+    danger: 'bg-danger-tint text-danger',
+    success: 'bg-forest-tint text-forest'
   };
+  const Icon = tone === 'danger' || tone === 'warning' ? AlertTriangle : tone === 'success' ? CheckCircle2 : AlertCircle;
   return (
-    <div className={`border rounded-panel p-3.5 flex gap-2.5 items-start text-[15px] ${map[tone]}`} role="status">
-      <AlertCircle size={18} className="shrink-0 mt-0.5" aria-hidden="true" />
+    <div className={`rounded-panel p-4 flex gap-3 items-start text-[15px] ${map[tone]}`} role="status">
+      <Icon size={18} className="shrink-0 mt-0.5" aria-hidden="true" />
       <div className="min-w-0">
         {title && <div className="font-semibold mb-0.5">{title}</div>}
         <div>{children}</div>
@@ -489,11 +491,11 @@ export function Pagination({
       </span>
       <div className="flex items-center gap-2">
         <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => onPage(page - 1)}>
-          <ChevronLeft size={16} /> Previous
+          <ChevronLeft size={15} /> Previous
         </Button>
         <span className="text-[13px] text-ink-muted num px-1">{page} / {pages}</span>
         <Button variant="secondary" size="sm" disabled={page >= pages} onClick={() => onPage(page + 1)}>
-          Next <ChevronRight size={16} />
+          Next <ChevronRight size={15} />
         </Button>
       </div>
     </div>
@@ -507,35 +509,17 @@ export function SearchBar({
 }: { value: string; onChange: (v: string) => void; placeholder: string; className?: string }) {
   return (
     <div className={`relative ${className}`}>
-      <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" aria-hidden="true" />
+      <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" aria-hidden="true" />
       <input
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-full min-h-[44px] pl-9 pr-3 py-2 rounded-input border border-sand bg-paper text-[15px]
-          placeholder:text-ink-muted/70 hover:border-sand focus:border-forest transition-colors duration-150"
+        className="field pl-10 pr-3"
       />
     </div>
   );
-}
-
-/* ---------------------------------- Hook ------------------------------------ */
-
-export function useAsync<T>(fn: () => Promise<T>, deps: any[] = []) {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const reload = () => {
-    setLoading(true);
-    fn()
-      .then(setData)
-      .catch(() => setError('Something went wrong. Please try again.'))
-      .finally(() => setLoading(false));
-  };
-  React.useEffect(() => { reload(); }, deps);
-  return { data, loading, error, reload };
 }
 
 /* -------------------------------- Segmented --------------------------------- */
@@ -551,9 +535,9 @@ export function Segmented<T extends string>({
 }) {
   return (
     <div className={className}>
-      {label && <span className="block text-[15px] font-medium text-ink mb-1">{label}</span>}
+      {label && <span className="block text-[15px] font-medium text-ink mb-1.5">{label}</span>}
       <div
-        className="inline-flex w-full border border-sand rounded-input overflow-hidden bg-paper"
+        className="inline-flex w-full gap-1.5 p-1.5 border border-sand rounded-pill bg-paper"
         role="group"
         aria-label={label}
       >
@@ -565,16 +549,16 @@ export function Segmented<T extends string>({
               type="button"
               aria-pressed={active}
               onClick={() => onChange(o.value)}
-              className={`flex-1 min-h-[44px] px-3 text-[15px] font-semibold capitalize whitespace-nowrap
-                transition-colors duration-150 border-r border-sand last:border-r-0 ${
+              className={`flex-1 min-h-[40px] px-3 rounded-pill text-[15px] font-semibold capitalize whitespace-nowrap
+                transition-colors duration-150 ${
                   active
                     ? 'bg-forest text-cream'
-                    : 'bg-paper text-ink hover:bg-cream-deep'
+                    : 'bg-transparent text-ink-muted hover:bg-cream-deep hover:text-ink'
                 }`}
             >
               {o.label}
               {o.meta && (
-                <span className={`ml-1.5 text-[13px] font-normal num ${active ? 'text-cream/80' : 'text-ink-muted'}`}>
+                <span className={`ml-1.5 text-[13px] font-normal ${active ? 'text-cream/85' : 'text-ink-muted'}`}>
                   {o.meta}
                 </span>
               )}
@@ -601,4 +585,21 @@ export function DetailGrid({
       ))}
     </dl>
   );
+}
+
+/* ---------------------------------- Hook ------------------------------------ */
+
+export function useAsync<T>(fn: () => Promise<T>, deps: any[] = []) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const reload = () => {
+    setLoading(true);
+    fn()
+      .then(setData)
+      .catch(() => setError('Something went wrong. Please try again.'))
+      .finally(() => setLoading(false));
+  };
+  React.useEffect(() => { reload(); }, deps);
+  return { data, loading, error, reload };
 }

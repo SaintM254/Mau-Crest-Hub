@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { Milk, ShoppingCart, HeartPulse, ClipboardCheck, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import { useAsync, Stat, StatSkeletonGrid, Panel, Alert, StatusPill, Button, Badge } from '../../components/ui';
 import { api } from '../../api';
+import { CowIcon } from '../../components/ui/CowIcon';
 import { fmtKES, fmtL, fmtDate, fmtDateTime, todayISO, sum } from '../../lib/utils';
 import { useSession } from '../../lib/store';
 import { format, subDays } from 'date-fns';
@@ -96,12 +97,15 @@ export function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="page-title">Good day, {firstName}</h1>
+      {/* Welcome row */}
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-[32px] font-bold text-ink leading-tight">
+            Welcome back, <span className="text-ink-muted font-medium">{firstName}</span>
+          </h1>
           <p className="page-sub">{fmtDate(today)} · Mau Crest Dairies, Molo, Nakuru County</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 shrink-0">
           {quickActions.map(a => (
             <Button
               key={a.label}
@@ -109,11 +113,72 @@ export function Dashboard() {
               onClick={() => navigate(a.to)}
               size="sm"
             >
-              <a.icon size={16} aria-hidden="true" /> {a.label}
+              <a.icon size={15} aria-hidden="true" /> {a.label}
             </Button>
           ))}
         </div>
       </header>
+
+      {/* Hero highlight */}
+      {!isEntry && (
+        <section className="bg-paper border border-sand rounded-panel p-5 md:p-6">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-center">
+            <div className="min-w-0">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-forest-tint text-forest text-[13px] font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-forest" aria-hidden="true" />
+                Milk today
+              </span>
+              <div className="mt-3 flex items-end gap-3 flex-wrap">
+                <div className="text-[32px] md:text-[40px] font-bold text-ink num leading-none">
+                  {fmtL(milkTodayTotal)}
+                </div>
+                <div className="text-[15px] text-ink-muted pb-1">
+                  from {inMilk} cows in milk
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Morning', value: bySession('morning') },
+                  { label: 'Midday', value: bySession('midday') },
+                  { label: 'Evening', value: bySession('evening') }
+                ].map(sess => (
+                  <div key={sess.label} className="bg-cream rounded-panel px-3 py-2.5">
+                    <div className="text-[13px] text-ink-muted">{sess.label}</div>
+                    <div className="text-[17px] font-bold num text-ink">{fmtL(sess.value)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="min-w-0 rounded-panel bg-cream p-4">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <span className="text-[13px] text-ink-muted font-medium">Last 14 days</span>
+                <span className="text-[13px] text-ink-muted num">
+                  {fmtL(sum(days.slice(-14).map(d => d.litres)))}
+                </span>
+              </div>
+              <div className="flex items-end gap-1.5 h-[104px]" role="img" aria-label="Milk production, last 14 days">
+                {days.slice(-14).map((d, i) => {
+                  const max = Math.max(...days.slice(-14).map(x => x.litres), 1);
+                  const h = Math.max(6, (d.litres / max) * 100);
+                  return (
+                    <div
+                      key={i}
+                      className="flex-1 bg-forest rounded-t-[3px]"
+                      style={{ height: `${h}%` }}
+                      title={`${d.date}: ${fmtL(d.litres)}`}
+                    />
+                  );
+                })}
+              </div>
+              <div className="flex justify-between text-[13px] text-ink-muted mt-2">
+                <span>{days[days.length - 14]?.date}</span>
+                <span>{days[days.length - 1]?.date}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {isEntry && (
         <Alert tone="info" title="Data entry role">
@@ -124,13 +189,6 @@ export function Dashboard() {
       {!isEntry && (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Stat
-              label="Milk today"
-              value={fmtL(milkTodayTotal)}
-              sub={`Morning ${fmtL(bySession('morning'))} · Midday ${fmtL(bySession('midday'))} · Evening ${fmtL(bySession('evening'))}`}
-              tone="forest"
-              icon={<Milk size={18} />}
-            />
             <Stat
               label="Revenue this month"
               value={fmtKES(revMonth)}
@@ -148,11 +206,12 @@ export function Dashboard() {
               tone={profit >= 0 ? 'default' : 'danger'}
               sub={profit >= 0 ? 'Revenue above expenses' : 'Expenses above revenue'}
             />
-            <Stat label="Milk this month" value={fmtL(milkMonth)} />
+            <Stat label="Milk this month" value={fmtL(milkMonth)} icon={<Milk size={17} />} />
             <Stat
               label="Animals in milk"
               value={`${inMilk}`}
               sub={`${dry} dry · ${heifers} heifers`}
+              icon={<CowIcon size={17} />}
             />
             <Stat label="Credit owed by customers" value={fmtKES(creditOwed)} tone={creditOwed > 0 ? 'gold' : 'default'} />
             <Stat

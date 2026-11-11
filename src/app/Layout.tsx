@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Beef, Milk, ShoppingCart, Users, Wallet, HeartPulse, HardHat,
+  LayoutDashboard, Milk, ShoppingCart, Users, Wallet, HeartPulse, HardHat,
   BarChart3, Bell, ScrollText, Settings, Search, Menu, X, LogOut, HelpCircle,
-  ChevronsLeft, ChevronsRight, WifiOff, CircleUser
+  ChevronsLeft, ChevronsRight, WifiOff
 } from 'lucide-react';
 import { LogoWithText } from '../assets/brand/Logo';
+import { CowIcon } from '../components/ui/CowIcon';
 import { useSession } from '../lib/store';
-import { useAsync, Badge, Dialog, Button } from '../components/ui';
+import { useAsync, Badge, Dialog, Button, ConfirmDialog, IconButton } from '../components/ui';
 import { api } from '../api';
 import { en } from '../i18n/en';
 
@@ -16,7 +17,7 @@ const NAV = [
   { to: '/milk', label: en.nav.milk, icon: Milk, module: 'milk', group: 'main' },
   { to: '/sales', label: en.nav.sales, icon: ShoppingCart, module: 'sales', group: 'main' },
   { to: '/customers', label: en.nav.customers, icon: Users, module: 'customers', group: 'main' },
-  { to: '/livestock', label: en.nav.livestock, icon: Beef, module: 'livestock', group: 'farm' },
+  { to: '/livestock', label: en.nav.livestock, icon: CowIcon, module: 'livestock', group: 'farm' },
   { to: '/health', label: en.nav.health, icon: HeartPulse, module: 'health', group: 'farm' },
   { to: '/labour', label: en.nav.labour, icon: HardHat, module: 'labour', group: 'farm' },
   { to: '/expenses', label: en.nav.expenses, icon: Wallet, module: 'expenses', group: 'farm' },
@@ -46,7 +47,7 @@ export function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [userMenu, setUserMenu] = useState(false);
+  const [signOutOpen, setSignOutOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<{ label: string; to: string; kind: string }[]>([]);
   const navigate = useNavigate();
@@ -76,7 +77,11 @@ export function Layout() {
     setSearchResults(res);
   };
 
-  const signOut = () => { setUser(null); navigate('/sign-in'); };
+  const confirmSignOut = () => {
+    setSignOutOpen(false);
+    setUser(null);
+    navigate('/sign-in');
+  };
 
   const visibleNav = NAV.filter(n => {
     if (!user) return false;
@@ -86,18 +91,21 @@ export function Layout() {
     return true;
   });
 
+  /* Collapsed rail shows icons only: no wordmark, no group labels, no link text. */
   const sidebarBody = (collapsed: boolean) => (
     <div className="flex flex-col h-full">
-      <div className={`border-b border-cream/15 ${collapsed ? 'px-2 py-4 flex justify-center' : 'px-4 py-4'}`}>
-        <LogoWithText dark compact={collapsed} />
-      </div>
+      {!collapsed && (
+        <div className="px-4 py-4 border-b border-cream/15">
+          <LogoWithText dark />
+        </div>
+      )}
 
-      <nav className="flex-1 overflow-y-auto py-2" aria-label="Main">
-        {GROUPS.map(g => {
+      <nav className={`flex-1 overflow-y-auto ${collapsed ? 'py-3' : 'py-2'}`} aria-label="Main">
+        {GROUPS.map((g, gi) => {
           const items = visibleNav.filter(n => n.group === g.id);
           if (items.length === 0) return null;
           return (
-            <div key={g.id} className="mb-1">
+            <div key={g.id} className={collapsed && gi > 0 ? 'mt-3 pt-3 border-t border-cream/15' : 'mb-1'}>
               {!collapsed && (
                 <div className="px-4 pt-3 pb-1 text-[13px] font-medium text-cream/60">{g.label}</div>
               )}
@@ -107,22 +115,29 @@ export function Layout() {
                   to={n.to}
                   end={n.to === '/'}
                   title={collapsed ? n.label : undefined}
+                  aria-label={collapsed ? n.label : undefined}
                   className={({ isActive }) =>
-                    `relative flex items-center gap-3 mx-2 px-3 min-h-[42px] rounded-input text-[15px]
-                     transition-colors duration-150 ${
-                       isActive
-                         ? 'bg-cream text-forest font-semibold'
-                         : 'text-cream/90 hover:bg-forest-dark/70 hover:text-cream'
-                     } ${collapsed ? 'justify-center px-0' : ''}`
+                    `relative flex items-center gap-3 rounded-pill text-[15px] transition-colors duration-150 ${
+                      collapsed
+                        ? 'justify-center w-11 h-11 mx-auto my-1'
+                        : 'mx-2 px-3.5 min-h-[42px]'
+                    } ${
+                      isActive
+                        ? 'bg-cream text-forest font-semibold'
+                        : 'text-cream/90 hover:bg-forest-dark/70 hover:text-cream'
+                    }`
                   }
                 >
-                  <n.icon size={19} className="shrink-0" aria-hidden="true" />
+                  <n.icon size={collapsed ? 20 : 19} className="shrink-0" aria-hidden="true" />
                   {!collapsed && <span className="truncate">{n.label}</span>}
                   {!collapsed && n.module === 'notifications' && unread > 0 && (
                     <span className="ml-auto inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5
                       rounded-full bg-gold-tint text-gold-dark text-[13px] font-semibold num">
                       {unread}
                     </span>
+                  )}
+                  {collapsed && n.module === 'notifications' && unread > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-gold-tint" aria-hidden="true" />
                   )}
                 </NavLink>
               ))}
@@ -131,12 +146,16 @@ export function Layout() {
         })}
       </nav>
 
-      <div className="p-2 border-t border-cream/15">
+      <div className={collapsed ? 'py-3 border-t border-cream/15' : 'p-2 border-t border-cream/15'}>
         <button
           onClick={toggleSidebar}
-          className={`w-full min-h-[44px] text-cream/90 hover:bg-forest-dark/70 hover:text-cream rounded-input
-            flex items-center gap-3 px-3 text-[15px] transition-colors duration-150 ${collapsed ? 'justify-center px-0' : ''}`}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className={`text-cream/90 hover:bg-forest-dark/70 hover:text-cream rounded-pill transition-colors duration-150 ${
+            collapsed
+              ? 'w-11 h-11 mx-auto flex items-center justify-center'
+              : 'w-full min-h-[44px] flex items-center gap-3 px-3.5 text-[15px]'
+          }`}
         >
           {collapsed ? <ChevronsRight size={19} /> : <><ChevronsLeft size={19} /><span>Collapse</span></>}
         </button>
@@ -148,32 +167,32 @@ export function Layout() {
     <div className="min-h-screen flex flex-col">
       {/* Top bar */}
       <header className="no-print sticky top-0 z-40 bg-cream border-b border-sand">
-        <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 h-16 max-w-[1440px] mx-auto w-full">
+        <div className="flex items-center gap-2 md:gap-3 px-3 md:px-5 h-16 max-w-[1440px] mx-auto w-full">
           <button
-            className="md:hidden min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-input hover:bg-cream-deep"
+            className="md:hidden icon-btn"
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >
-            <Menu size={22} />
+            <Menu size={20} />
           </button>
           <div className="md:hidden"><LogoWithText compact /></div>
 
           <div className="hidden md:flex flex-1 max-w-md relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" aria-hidden="true" />
+            <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" aria-hidden="true" />
             <input
               value={search}
               onChange={(e) => doSearch(e.target.value)}
               placeholder="Search animals, customers, employees"
               aria-label="Search animals, customers, employees"
-              className="w-full min-h-[40px] pl-9 pr-3 rounded-input border border-sand bg-paper text-[15px]
+              className="w-full min-h-[40px] pl-10 pr-3 rounded-pill border border-sand bg-white text-[15px]
                 placeholder:text-ink-muted/70 focus:border-forest transition-colors duration-150"
             />
             {searchResults.length > 0 && (
-              <div className="absolute top-full mt-1 left-0 right-0 panel z-50 overflow-hidden">
+              <div className="absolute top-full mt-2 left-0 right-0 bg-paper border border-sand rounded-panel z-50 overflow-hidden">
                 {searchResults.map((r, i) => (
                   <button
                     key={i}
-                    className="w-full text-left px-3 min-h-[44px] hover:bg-cream-deep text-[15px] flex items-center gap-2 border-b border-sand last:border-b-0"
+                    className="w-full text-left px-4 min-h-[44px] hover:bg-cream text-[15px] flex items-center gap-2 border-b border-sand last:border-b-0"
                     onClick={() => { navigate(r.to); setSearchResults([]); setSearch(''); }}
                   >
                     <span className="flex-1 truncate">{r.label}</span>
@@ -193,77 +212,60 @@ export function Layout() {
             </Badge>
           </div>
           <div className="sm:hidden">
-            <span className={`inline-flex items-center justify-center min-w-[36px] min-h-[36px] rounded-full border
-              ${isOnline ? 'bg-forest-tint border-forest/25 text-forest' : 'bg-warning-tint border-warning/25 text-warning'}`}
+            <span
+              className={`inline-flex items-center justify-center min-w-[36px] min-h-[36px] rounded-full
+                ${isOnline ? 'bg-forest-tint text-forest' : 'bg-warning-tint text-warning'}`}
               aria-label={isOnline ? en.common.online : 'Offline'}
-              title={isOnline ? en.common.online : 'Offline'}>
+              title={isOnline ? en.common.online : 'Offline'}
+            >
               {isOnline ? <span className="w-2 h-2 rounded-full bg-forest" /> : <WifiOff size={16} />}
             </span>
           </div>
 
           <button
-            className="relative min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-input text-ink-muted hover:text-ink hover:bg-cream-deep transition-colors duration-150"
+            className="relative icon-btn"
             onClick={() => navigate('/notifications')}
             aria-label={`Notifications${unread > 0 ? `, ${unread} unread` : ''}`}
           >
-            <Bell size={21} />
+            <Bell size={19} />
             {unread > 0 && (
-              <span className="absolute top-1.5 right-1.5 bg-danger text-white text-[11px] rounded-full min-w-[18px] h-[18px]
+              <span className="absolute -top-0.5 -right-0.5 bg-danger text-white text-[11px] rounded-full min-w-[18px] h-[18px]
                 inline-flex items-center justify-center px-1 num font-semibold border-2 border-cream">
                 {unread}
               </span>
             )}
           </button>
+
           <button
-            className="hidden sm:inline-flex min-w-[44px] min-h-[44px] items-center justify-center rounded-input text-ink-muted hover:text-ink hover:bg-cream-deep transition-colors duration-150"
+            className="hidden sm:inline-flex icon-btn"
             onClick={() => setHelpOpen(true)}
             aria-label="Help"
           >
-            <HelpCircle size={21} />
+            <HelpCircle size={19} />
           </button>
 
-          <div className="relative">
-            <button
-              className="min-h-[40px] pl-1.5 pr-2 md:pr-3 rounded-input border border-sand bg-paper hover:bg-cream-deep
-                inline-flex items-center gap-2 text-[15px] font-semibold text-ink transition-colors duration-150"
-              onClick={() => setUserMenu(!userMenu)}
-              aria-haspopup="menu"
-              aria-expanded={userMenu}
-            >
-              <span className="w-7 h-7 rounded-full bg-forest text-cream inline-flex items-center justify-center text-[13px] font-bold">
-                {user?.name?.[0] ?? 'U'}
-              </span>
-              <span className="hidden md:inline">{user?.name.split(' ')[0]}</span>
-            </button>
-            {userMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setUserMenu(false)} />
-                <div className="absolute right-0 mt-2 panel w-64 z-50 p-2" role="menu">
-                  <div className="px-3 py-2.5 flex items-center gap-3 border-b border-sand mb-1">
-                    <CircleUser size={28} className="text-ink-muted shrink-0" aria-hidden="true" />
-                    <div className="min-w-0">
-                      <div className="font-semibold text-[15px] truncate">{user?.name}</div>
-                      <div className="text-ink-muted text-[13px] capitalize">{user?.role}</div>
-                    </div>
-                  </div>
-                  <button
-                    className="w-full text-left px-3 min-h-[44px] hover:bg-cream-deep rounded-input text-[15px]"
-                    role="menuitem"
-                    onClick={() => { navigate('/settings'); setUserMenu(false); }}
-                  >
-                    {en.auth.switchRole} <span className="text-ink-muted">({en.auth.demoOnly})</span>
-                  </button>
-                  <button
-                    className="w-full text-left px-3 min-h-[44px] hover:bg-cream-deep rounded-input text-[15px] flex items-center gap-2"
-                    role="menuitem"
-                    onClick={signOut}
-                  >
-                    <LogOut size={16} aria-hidden="true" /> {en.auth.signOut}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          {/* Sign out, top right */}
+          <button
+            className="icon-btn"
+            onClick={() => setSignOutOpen(true)}
+            aria-label={en.auth.signOut}
+            title={en.auth.signOut}
+          >
+            <LogOut size={19} />
+          </button>
+
+          {/* Account */}
+          <button
+            className="min-h-[40px] pl-1 pr-2.5 rounded-pill border border-sand bg-paper hover:bg-cream
+              inline-flex items-center gap-2 text-[15px] font-semibold text-ink transition-colors duration-150"
+            onClick={() => navigate('/settings')}
+            aria-label={`Account and settings for ${user?.name ?? 'user'}`}
+          >
+            <span className="w-8 h-8 rounded-full bg-forest text-cream inline-flex items-center justify-center text-[13px] font-bold">
+              {user?.name?.[0] ?? 'U'}
+            </span>
+            <span className="hidden lg:inline">{user?.name.split(' ')[0]}</span>
+          </button>
         </div>
       </header>
 
@@ -271,7 +273,7 @@ export function Layout() {
         {/* Desktop sidebar */}
         <aside
           className={`no-print hidden md:block bg-forest shrink-0 sticky top-16 h-[calc(100vh-4rem)] transition-[width] duration-150
-            ${sidebarCollapsed ? 'w-[76px]' : 'w-64'}`}
+            ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}
           aria-label="Sidebar"
         >
           {sidebarBody(sidebarCollapsed)}
@@ -284,11 +286,11 @@ export function Layout() {
             <div className="absolute left-0 top-0 bottom-0 w-[280px] bg-forest flex flex-col">
               <div className="flex justify-end p-2">
                 <button
-                  className="min-w-[44px] min-h-[44px] text-cream inline-flex items-center justify-center rounded-input hover:bg-forest-dark"
+                  className="icon-btn-dark"
                   onClick={() => setMobileOpen(false)}
                   aria-label="Close menu"
                 >
-                  <X size={22} />
+                  <X size={20} />
                 </button>
               </div>
               {sidebarBody(false)}
@@ -309,7 +311,7 @@ export function Layout() {
             { to: '/', label: 'Home', icon: LayoutDashboard },
             { to: '/milk', label: 'Milk', icon: Milk },
             { to: '/sales', label: 'Sales', icon: ShoppingCart },
-            { to: '/livestock', label: 'Animals', icon: Beef }
+            { to: '/livestock', label: 'Animals', icon: CowIcon }
           ].map(t => (
             <NavLink
               key={t.to}
@@ -337,13 +339,7 @@ export function Layout() {
         <div className="fixed inset-0 z-50 md:hidden bg-cream overflow-y-auto">
           <div className="flex items-center justify-between px-4 h-16 border-b border-sand bg-paper sticky top-0">
             <span className="text-[17px] font-bold text-ink">All modules</span>
-            <button
-              className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-input hover:bg-cream-deep"
-              onClick={() => setMoreOpen(false)}
-              aria-label="Close"
-            >
-              <X size={22} />
-            </button>
+            <IconButton onClick={() => setMoreOpen(false)} aria-label="Close"><X size={18} /></IconButton>
           </div>
           <div className="p-3 space-y-4">
             {GROUPS.map(g => {
@@ -372,9 +368,14 @@ export function Layout() {
                 </div>
               );
             })}
-            <Button variant="secondary" className="w-full" onClick={() => { setMoreOpen(false); setHelpOpen(true); }}>
-              <HelpCircle size={17} /> Help
-            </Button>
+            <div className="flex flex-col gap-2 pt-1">
+              <Button variant="secondary" className="w-full" onClick={() => { setMoreOpen(false); setHelpOpen(true); }}>
+                <HelpCircle size={17} /> Help
+              </Button>
+              <Button variant="secondary" className="w-full" onClick={() => { setMoreOpen(false); setSignOutOpen(true); }}>
+                <LogOut size={17} /> {en.auth.signOut}
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -389,6 +390,16 @@ export function Layout() {
           ))}
         </div>
       </Dialog>
+
+      <ConfirmDialog
+        open={signOutOpen}
+        onClose={() => setSignOutOpen(false)}
+        onConfirm={confirmSignOut}
+        title="Sign out?"
+        body="You will be returned to the sign-in screen. Your saved records stay on this device."
+        confirmLabel="Yes, sign out"
+        cancelLabel="No, stay signed in"
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import {
   StatusPill, Dialog, EmptyState, FormSection, FileDropzone, Stat, ConfirmDialog, Skeleton,
   Alert, SearchBar, Pagination, Segmented, PageHeader, Panel, DetailGrid, StatSkeletonGrid
 } from '../../components/ui';
+import { CowIcon } from '../../components/ui/CowIcon';
 import { useState } from 'react';
 import { Milk, Search } from 'lucide-react';
 
@@ -26,7 +27,7 @@ export function DesignSystem() {
     <div className="space-y-8 max-w-4xl">
       <PageHeader
         title="Design system"
-        subtitle="Components used across Mau Crest Hub. Flat fills only, 1px borders, no shadows, no gradients, and colour is never the only signal."
+        subtitle="Components used across Mau Crest Hub. Flat fills only, 1px borders, no shadows, no gradients, pill-shaped controls and 16px panels. Colour is never the only signal."
       />
 
       <Section title="Page header" note="Title, optional subtitle, optional actions.">
@@ -39,7 +40,7 @@ export function DesignSystem() {
         </div>
       </Section>
 
-      <Section title="Buttons" note="Primary is forest. Secondary is outlined paper. Danger uses the danger tint, not a solid fill.">
+      <Section title="Buttons" note="Pill shaped. Primary is forest, secondary is outlined paper, danger uses the danger tint. Disabled buttons go cream rather than fading.">
         <div className="flex flex-wrap items-center gap-3">
           <Button>Primary</Button>
           <Button variant="secondary">Secondary</Button>
@@ -50,6 +51,14 @@ export function DesignSystem() {
           <Button size="sm" variant="secondary">Small</Button>
           <Button size="sm"><Milk size={15} /> With icon</Button>
           <IconButton aria-label="Example icon button"><Search size={18} /></IconButton>
+        </div>
+      </Section>
+
+      <Section title="Icons" note="The livestock mark is drawn at the same weight as the icon set, so it sits evenly with the rest.">
+        <div className="flex flex-wrap items-center gap-4 panel p-4">
+          <span className="inline-flex items-center gap-2 text-[15px]"><CowIcon size={20} /> Livestock</span>
+          <span className="inline-flex items-center gap-2 text-[15px]"><CowIcon size={26} /> Large</span>
+          <span className="inline-flex items-center gap-2 text-[15px]"><CowIcon size={20} className="text-forest" /> Forest</span>
         </div>
       </Section>
 
@@ -118,7 +127,7 @@ export function DesignSystem() {
         </Panel>
       </Section>
 
-      <Section title="Tables" note="Headers are cream-deep with muted sentence case labels. Rows have 1px sand dividers.">
+      <Section title="Tables" note="Headers are cream-deep with muted sentence case labels. Rows have 1px sand dividers and no double borders.">
         <div className="panel overflow-x-auto">
           <table className="table-base min-w-[520px]">
             <thead>

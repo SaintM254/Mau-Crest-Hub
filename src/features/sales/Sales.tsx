@@ -103,9 +103,9 @@ export function SalesPage() {
           <Select label="Customer" value={customerId} onChange={(e) => setCustomerId(e.target.value)} options={[{ value: 'walkin', label: 'Walk-in customer' }, ...data.customers.map(c => ({ value: c.id, label: `${c.name} (${c.type}, ${fmtKES(c.pricePerLitre)}/L)` }))]} />
           <div>
             <span className="block text-[15px] font-medium mb-1">Quantity (litres)</span>
-            <input inputMode="decimal" type="number" value={litres} onChange={(e) => setLitres(e.target.value)} className="w-full min-h-[56px] px-4 rounded-input border border-sand bg-paper text-[24px] num" placeholder="0" />
+            <input inputMode="decimal" type="number" value={litres} onChange={(e) => setLitres(e.target.value)} className="w-full min-h-[56px] px-4 rounded-input border border-sand bg-cream text-[24px] num" placeholder="0" />
             <div className="grid grid-cols-4 gap-2 mt-2">
-              {[1, 5, 10, 20].map(n => <button key={n} onClick={() => setLitres(String(n))} className="min-h-[48px] rounded-input border border-sand bg-cream-deep font-semibold num">{n} L</button>)}
+              {[1, 5, 10, 20].map(n => <button key={n} onClick={() => setLitres(String(n))} className="min-h-[46px] rounded-pill border border-sand bg-cream font-semibold num text-[15px] hover:bg-cream-deep transition-colors duration-150">{n} L</button>)}
             </div>
           </div>
           <div className="flex justify-between text-[17px]"><span>Price: <span className="num">{fmtKES(price)} / L</span></span><span className="font-bold num">Total: {fmtKES(total)}</span></div>
@@ -120,8 +120,8 @@ export function SalesPage() {
                     key={m}
                     onClick={() => setMethod(m)}
                     aria-pressed={active}
-                    className={`min-h-[48px] rounded-input border font-semibold text-[15px] transition-colors duration-150 ${
-                      active ? 'bg-forest text-cream border-forest' : 'bg-paper border-sand text-ink hover:bg-cream-deep'
+                    className={`min-h-[48px] rounded-pill border font-semibold text-[15px] transition-colors duration-150 ${
+                      active ? 'bg-forest text-cream border-forest' : 'bg-cream border-sand text-ink hover:bg-cream-deep'
                     }`}
                   >
                     {m === 'mpesa' ? 'M-Pesa' : m.charAt(0).toUpperCase() + m.slice(1)}
@@ -134,7 +134,7 @@ export function SalesPage() {
           {method === 'cash' && (
             <div className="grid grid-cols-2 gap-3">
               <Input label="Amount received (KES)" type="number" inputMode="decimal" value={received} onChange={(e) => setReceived(e.target.value)} />
-              <div><span className="block text-[15px] font-medium mb-1">Change</span><div className="min-h-[44px] px-3 py-2 rounded-input bg-cream-deep num font-bold">{fmtKES(change)}</div></div>
+              <div><span className="block text-[15px] font-medium mb-1">Change</span><div className="min-h-[46px] px-4 py-2 rounded-input bg-cream border border-sand num font-bold inline-flex items-center">{fmtKES(change)}</div></div>
             </div>
           )}
           {method === 'mpesa' && (
