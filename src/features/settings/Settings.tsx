@@ -1,0 +1,170 @@
+import { useState } from 'react';
+import { useAsync, Button, Input, Select, Badge, Alert, Switch, Dialog, ConfirmDialog, Tabs } from '../../components/ui';
+import { api } from '../../api';
+import { fmtDate, fmtKES } from '../../lib/utils';
+import { useSession } from '../../lib/store';
+import { resetData } from '../../data/seed';
+
+export function SettingsPage() {
+  const { user, pushToast, simulateOffline, setSimulateOffline } = useSession();
+  const { data, loading, reload } = useAsync(async () => {
+    const [settings, backups, users, perms] = await Promise.all([api.getSettings(), api.listBackups(), api.listUsers(), api.listPermissions()]);
+    return { settings, backups, users, perms };
+  });
+  const [tab, setTab] = useState('farm');
+  const [form, setForm] = useState<any>(null);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const [userForm, setUserForm] = useState<any>({ name: '', email: '', phone: '', role: 'entry', password: 'entry123' });
+
+  if (loading || !data) return <div className="h-40 bg-cream-deep skeleton-pulse rounded-panel" />;
+  if (user?.role !== 'owner') return <Alert tone="danger">You do not have permission to view Settings. Settings are for the owner only.</Alert>;
+
+  const s = form || data.settings || {};
+  const set = (k: string, v: any) => setForm({ ...s, [k]: v });
+
+  const saveSettings = async () => {
+    await api.saveSettings(s);
+    pushToast('Settings saved');
+    reload();
+  };
+
+  const togglePerm = (role: string, module: string, field: string) => {
+    const perms = data.perms.map(p => {
+      if (p.role === role && p.module === module) return { ...p, [field]: !(p as any)[field] };
+      return p;
+    });
+    api.savePermissions(perms).then(reload);
+  };
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-[24px] font-bold">Settings</h1>
+      <Tabs tabs={[{ id: 'farm', label: 'Farm and prices' }, { id: 'integrations', label: 'M-Pesa, SMS and reminders' }, { id: 'payroll', label: 'Payroll rates' }, { id: 'users', label: 'Users and permissions' }, { id: 'backup', label: 'Backups' }, { id: 'demo', label: 'Demo and role' }]} active={tab} onChange={setTab} />
+
+      {tab === 'farm' && (
+        <div className="bg-paper border border-sand rounded-panel p-4 space-y-4 max-w-2xl">
+          <Input label="Farm name" value={s.farmName || ''} onChange={(e) => set('farmName', e.target.value)} />
+          <Input label="Location" value={s.location || ''} onChange={(e) => set('location', e.target.value)} />
+          <Input label="Farm phone" value={s.phone || ''} onChange={(e) => set('phone', e.target.value)} />
+          <Input label="Farm email" value={s.email || ''} onChange={(e) => set('email', e.target.value)} />
+          <div className="grid md:grid-cols-3 gap-3">
+            <Input label="Price — individuals (KES/L)" type="number" value={s.priceIndividual || ''} onChange={(e) => set('priceIndividual', Number(e.target.value))} />
+            <Input label="Price — shops (KES/L)" type="number" value={s.priceShop || ''} onChange={(e) => set('priceShop', Number(e.target.value))} />
+            <Input label="Price — cooperatives (KES/L)" type="number" value={s.priceCoop || ''} onChange={(e) => set('priceCoop', Number(e.target.value))} />
+          </div>
+          <Input label="Milk reconciliation threshold (L)" type="number" value={s.reconThreshold || ''} onChange={(e) => set('reconThreshold', Number(e.target.value))} />
+          <Button onClick={saveSettings}>Save settings</Button>
+        </div>
+      )}
+
+      {tab === 'integrations' && (
+        <div className="bg-paper border border-sand rounded-panel p-4 space-y-4 max-w-2xl">
+          <Input label="M-Pesa Till number" value={s.tillNumber || ''} onChange={(e) => set('tillNumber', e.target.value)} />
+          <Input label="M-Pesa Paybill number" value={s.paybillNumber || ''} onChange={(e) => set('paybillNumber', e.target.value)} />
+          <div><Badge tone="success">M-Pesa: Connected (mock)</Badge></div>
+          <Input label="SMS sender name" value={s.smsSender || ''} onChange={(e) => set('smsSender', e.target.value)} />
+          <Input label="Email sender" value={s.emailSender || ''} onChange={(e) => set('emailSender', e.target.value)} />
+          <Input label="Reminder days before" type="number" value={s.reminderDays || ''} onChange={(e) => set('reminderDays', Number(e.target.value))} />
+          <Button variant="secondary" onClick={async () => { await api.sendMessage({ channel: 'sms', to: '0712 345 678', body: 'Test message from Mau Crest Hub.' }); pushToast('Test message sent (mock)'); }}>Send test SMS</Button>
+          <Button onClick={saveSettings}>Save settings</Button>
+        </div>
+      )}
+
+      {tab === 'payroll' && (
+        <div className="bg-paper border border-sand rounded-panel p-4 space-y-4 max-w-2xl">
+          <Alert tone="warning">Statutory rates are placeholders to be confirmed with your accountant.</Alert>
+          <Input label="PAYE rate (%)" type="number" value={s.payeRate || ''} onChange={(e) => set('payeRate', Number(e.target.value))} />
+          <Input label="NHIF rate (%)" type="number" value={s.nhifRate || ''} onChange={(e) => set('nhifRate', Number(e.target.value))} />
+          <Input label="NSSF rate (%)" type="number" value={s.nssfRate || ''} onChange={(e) => set('nssfRate', Number(e.target.value))} />
+          <Button onClick={saveSettings}>Save settings</Button>
+        </div>
+      )}
+
+      {tab === 'users' && (
+        <div className="space-y-4">
+          <div className="flex gap-3"><Button onClick={() => setUserOpen(true)}>Add user</Button></div>
+          <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
+            <table className="w-full text-[15px] min-w-[640px]">
+              <thead><tr className="bg-cream-deep text-left"><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Role</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>
+              <tbody>
+                {data.users.map(u => (
+                  <tr key={u.id} className="border-t border-sand">
+                    <td className="p-3">{u.name}</td><td className="p-3">{u.email}</td><td className="p-3 capitalize">{u.role}</td>
+                    <td className="p-3"><Badge tone={u.active ? 'success' : 'neutral'}>{u.active ? 'Active' : 'Inactive'}</Badge></td>
+                    <td className="p-3">
+                      <button className="text-forest font-semibold min-h-[44px] px-2" onClick={async () => { await api.saveUser({ ...u, active: !u.active }); reload(); }}>{u.active ? 'Deactivate' : 'Activate'}</button>
+                      <button className="text-forest font-semibold min-h-[44px] px-2" onClick={async () => { await api.saveUser({ ...u, password: 'reset123' }); pushToast('Password reset to reset123'); }}>Reset password</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="bg-paper border border-sand rounded-panel p-4 overflow-x-auto">
+            <h2 className="text-[17px] font-semibold mb-3">Permission matrix</h2>
+            <table className="w-full text-[15px] min-w-[800px]">
+              <thead><tr className="bg-cream-deep text-left"><th className="p-2">Module</th>{['owner', 'manager', 'entry'].map(r => <th key={r} className="p-2 capitalize" colSpan={4}>{r}</th>)}</tr>
+              <tr className="bg-cream-deep text-left"><th className="p-2"></th>{['owner', 'manager', 'entry'].map(r => <>{['View', 'Create', 'Edit', 'Delete'].map(a => <th key={r + a} className="p-2">{a}</th>)}</>)}</tr></thead>
+              <tbody>
+                {[...new Set(data.perms.map(p => p.module))].map(mod => (
+                  <tr key={mod} className="border-t border-sand">
+                    <td className="p-2 capitalize">{mod}</td>
+                    {['owner', 'manager', 'entry'].map(role => {
+                      const p = data.perms.find(x => x.role === role && x.module === mod);
+                      if (!p) return null;
+                      return (['view', 'create', 'edit', 'del'] as const).map(f => (
+                        <td key={role + f} className="p-2"><input type="checkbox" checked={(p as any)[f]} onChange={() => togglePerm(role, mod, f)} className="w-5 h-5 accent-[#1F4D2E]" aria-label={`${role} ${mod} ${f}`} /></td>
+                      ));
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === 'backup' && (
+        <div className="space-y-4">
+          <div className="flex gap-3">
+            <Button onClick={async () => { await api.backupNow(); pushToast('Backup complete'); reload(); }}>Back up now</Button>
+            <Button variant="secondary" onClick={() => pushToast('Restore requested (mock)')}>Request restore</Button>
+          </div>
+          <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
+            <table className="w-full text-[15px]">
+              <thead><tr className="bg-cream-deep text-left"><th className="p-3">Date</th><th className="p-3">Size</th><th className="p-3">Status</th></tr></thead>
+              <tbody>{[...data.backups].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30).map(b => <tr key={b.id} className="border-t border-sand"><td className="p-3">{fmtDate(b.date)}</td><td className="p-3 num">{b.size}</td><td className="p-3"><Badge tone={b.status === 'success' ? 'success' : b.status === 'failed' ? 'danger' : 'warning'}>{b.status}</Badge></td></tr>)}</tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === 'demo' && (
+        <div className="bg-paper border border-sand rounded-panel p-4 space-y-4 max-w-2xl">
+          <Switch label="Simulate offline mode" checked={simulateOffline} onChange={(e) => setSimulateOffline(e.target.checked)} />
+          <p className="text-[15px] text-ink-muted">Turn this on to see the offline chip and sync behaviour. Changes are saved on this device.</p>
+          <div className="border-t border-sand pt-4">
+            <h2 className="text-[17px] font-semibold mb-2">Reset demo data</h2>
+            <p className="text-[15px] text-ink-muted mb-3">This removes all changes and restores the original demo data.</p>
+            <Button variant="danger" onClick={() => setResetOpen(true)}>Reset demo data</Button>
+          </div>
+          <div className="border-t border-sand pt-4 text-[15px] text-ink-muted">Mau Crest Hub version 1.0.0 (demo). All data is fictional.</div>
+        </div>
+      )}
+
+      <Dialog open={userOpen} onClose={() => setUserOpen(false)} title="Add user">
+        <div className="space-y-4">
+          <Input label="Full name" value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })} />
+          <Input label="Email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} />
+          <Input label="Phone" value={userForm.phone} onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })} />
+          <Select label="Role" value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })} options={[{ value: 'owner', label: 'Owner' }, { value: 'manager', label: 'Manager' }, { value: 'entry', label: 'Data entry' }]} />
+          <Input label="Password" value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} />
+          <div className="flex gap-3 justify-end"><Button variant="secondary" onClick={() => setUserOpen(false)}>Cancel</Button><Button onClick={async () => { await api.saveUser({ ...userForm, active: true }); setUserOpen(false); pushToast('User added'); reload(); }}>Add user</Button></div>
+        </div>
+      </Dialog>
+
+      <ConfirmDialog open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={async () => { await resetData(); setResetOpen(false); pushToast('Demo data reset'); reload(); }} title="Reset demo data" body="All changes will be removed and the original demo data restored. Continue?" confirmLabel="Reset demo data" />
+    </div>
+  );
+}
