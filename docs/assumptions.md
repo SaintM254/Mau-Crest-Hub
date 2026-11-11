@@ -15,3 +15,15 @@ Decisions made where the brief was unclear. Each is easy to change.
 11. **PWA icons** are generated from the same SVG mark; replace `public/icon-192.png` and `public/icon-512.png` with final artwork.
 12. **Data entry 24-hour edit rule** is shown as a note; the mock does not hard-block older edits.
 13. **No TanStack Query/Table** — the mock API is fast enough with local state and `useAsync`. The contract in `docs/api-contract.md` keeps the door open for a real backend.
+
+## 14. UI overhaul (November 2026)
+
+- Tables use one shared class pair (`table-base` plus a wrapper panel). Row dividers come from CSS so a table cannot render with doubled borders. Long tables keep their minimum width and scroll inside the panel on small screens.
+- Page titles use a single `PageHeader` component (title, one-line subtitle, actions). Subtitle text is sentence case and describes the page purpose, not marketing copy.
+- Sidebar navigation is grouped into Daily work, Farm and Manage. Grouping is hidden when the sidebar is collapsed so the icon-only state stays clean.
+- The active sidebar item uses a cream fill with forest text rather than a lighter green fill, so contrast is comfortably above WCAG AA in every state.
+- Status is shown with a dot plus a text label inside `StatusPill`, so it is never conveyed by colour alone. Plain `Badge` is used only for non-status labels such as record type.
+- Charts take their colours from CSS variables (`rgb(var(--forest))` and similar) instead of hard-coded hex values, and bars are square with a 3px top radius. Legends are always shown, so a series is not identified by colour alone.
+- `Segmented` is used for two to four mutually exclusive choices (milk session, per cow or per batch). Button groups inside forms stay buttons rather than custom radios so keyboard behaviour is native.
+- The sidebar is sticky below the 64px top bar on screens of 768px and wider, which keeps navigation visible on long record pages.
+- A failed automated screenshot check in the build environment was not possible (no browser available); layout was verified by building and by reviewing rendered class output instead.

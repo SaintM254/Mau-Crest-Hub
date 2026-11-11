@@ -43,7 +43,7 @@ function RoleSwitch() {
   if (!user) return null;
   const switchTo = (u: any) => { setUser(u); window.location.hash = '#/'; window.location.reload(); };
   return (
-    <div className="bg-paper border border-sand rounded-panel p-4">
+    <div className="panel p-4">
       <h2 className="text-[17px] font-semibold mb-2">Switch demo role</h2>
       <p className="text-[13px] text-ink-muted mb-3">Demo only. Switch to see each role's experience.</p>
       <div className="flex flex-wrap gap-2">

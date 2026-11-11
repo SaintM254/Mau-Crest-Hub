@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAsync, Button, Input, Select, Dialog, Badge, EmptyState, SearchBar, Alert } from '../../components/ui';
+import { useAsync, Button, Input, Select, Dialog, Badge, EmptyState, SearchBar, Alert, PageHeader } from '../../components/ui';
 import { api } from '../../api';
 import { fmtKES, fmtDate, sum } from '../../lib/utils';
 import { useSession } from '../../lib/store';
@@ -23,25 +23,27 @@ export function CustomersList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-[24px] font-bold">Customers</h1>
-        <div className="flex-1" />
-        <Button variant="secondary" onClick={() => exportExcel('customers', data.map(c => ({ Name: c.name, Type: c.type, Phone: c.phone, Balance: c.balance })))}>Export</Button>
-        <Button onClick={() => setOpen(true)}>Add customer</Button>
-      </div>
+      <PageHeader
+        title="Customers"
+        subtitle="Regular buyers, credit balances and contact details."
+        actions={<>
+          <Button variant="secondary" onClick={() => exportExcel('customers', data.map(c => ({ Name: c.name, Type: c.type, Phone: c.phone, Balance: c.balance })))}>Export</Button>
+          <Button onClick={() => setOpen(true)}>Add customer</Button>
+        </>}
+      />
       <div className="w-full md:w-80"><SearchBar value={q} onChange={setQ} placeholder="Search customers" /></div>
       {filtered.length === 0 ? <EmptyState title="No customers" body="Add your first customer to start selling." action={<Button onClick={() => setOpen(true)}>Add customer</Button>} /> : (
-        <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-          <table className="w-full text-[15px] min-w-[720px]">
-            <thead><tr className="bg-cream-deep text-left"><th className="p-3">Name</th><th className="p-3">Type</th><th className="p-3">Phone</th><th className="p-3">Price / L</th><th className="p-3">Balance</th><th className="p-3">Actions</th></tr></thead>
+        <div className="panel overflow-x-auto">
+          <table className="table-base min-w-[720px]">
+            <thead><tr><th>Name</th><th>Type</th><th>Phone</th><th>Price / L</th><th>Balance</th><th>Actions</th></tr></thead>
             <tbody>
               {filtered.map(c => (
-                <tr key={c.id} className="border-t border-sand">
-                  <td className="p-3"><a href={`#/customers/${c.id}`} className="text-forest font-semibold underline">{c.name}</a></td>
-                  <td className="p-3 capitalize">{c.type}</td><td className="p-3 num">{c.phone}</td>
-                  <td className="p-3 num">{fmtKES(c.pricePerLitre)}</td>
-                  <td className="p-3 num">{c.balance > 0 ? <Badge tone="warning">{fmtKES(c.balance)}</Badge> : fmtKES(0)}</td>
-                  <td className="p-3"><a href={`#/customers/${c.id}`} className="text-forest font-semibold min-h-[44px] inline-flex items-center px-2">View</a></td>
+                <tr key={c.id}>
+                  <td><a href={`#/customers/${c.id}`} className="text-forest font-semibold underline">{c.name}</a></td>
+                  <td className="capitalize">{c.type}</td><td className="num">{c.phone}</td>
+                  <td className="num">{fmtKES(c.pricePerLitre)}</td>
+                  <td className="num">{c.balance > 0 ? <Badge tone="warning">{fmtKES(c.balance)}</Badge> : fmtKES(0)}</td>
+                  <td><a href={`#/customers/${c.id}`} className="text-forest font-semibold min-h-[44px] inline-flex items-center px-2">View</a></td>
                 </tr>
               ))}
             </tbody>
@@ -87,8 +89,8 @@ export function CustomerProfile({ id }: { id: string }) {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[24px] font-bold">{c.name}</h1>
-      <div className="bg-paper border border-sand rounded-panel p-4 grid md:grid-cols-4 gap-4 text-[15px]">
+      <PageHeader title={c.name} subtitle="Customer details, statements and sales history." />
+      <div className="panel p-4 grid md:grid-cols-4 gap-4 text-[15px]">
         <div><div className="text-ink-muted text-[13px]">Type</div><div className="capitalize">{c.type}</div></div>
         <div><div className="text-ink-muted text-[13px]">Phone</div><div className="num">{c.phone}</div></div>
         <div><div className="text-ink-muted text-[13px]">Price</div><div className="num">{fmtKES(c.pricePerLitre)} / L</div></div>
@@ -100,11 +102,11 @@ export function CustomerProfile({ id }: { id: string }) {
         <Button onClick={() => setPayOpen(true)}>Receive payment</Button>
         <Button variant="secondary" onClick={() => printArea(`<h2>Statement — ${c.name}</h2><p>Balance: ${fmtKES(c.balance)}</p><table><tr><th>Date</th><th>Litres</th><th>Total</th></tr>${data.sales.map(s => `<tr><td>${s.date}</td><td>${s.litres}</td><td>${fmtKES(s.total)}</td></tr>`).join('')}</table>`)}>Print statement</Button>
       </div>
-      <div className="bg-paper border border-sand rounded-panel p-4">
+      <div className="panel p-4">
         <h2 className="text-[17px] font-semibold mb-3">Sales history</h2>
         {data.sales.length === 0 ? <p className="text-[15px] text-ink-muted">No sales yet for this customer.</p> : (
-          <table className="w-full text-[15px]"><thead><tr className="bg-cream-deep text-left"><th className="p-2">Date</th><th className="p-2">Receipt</th><th className="p-2">Litres</th><th className="p-2">Total</th></tr></thead>
-          <tbody>{data.sales.map(s => <tr key={s.id} className="border-t border-sand"><td className="p-2">{fmtDate(s.date)}</td><td className="p-2 num">{s.receiptNo}</td><td className="p-2 num">{s.litres} L</td><td className="p-2 num">{fmtKES(s.total)}</td></tr>)}</tbody></table>
+          <table className="table-base"><thead><tr><th>Date</th><th>Receipt</th><th>Litres</th><th>Total</th></tr></thead>
+          <tbody>{data.sales.map(s => <tr key={s.id}><td>{fmtDate(s.date)}</td><td className="p-2 num">{s.receiptNo}</td><td className="p-2 num">{s.litres} L</td><td className="p-2 num">{fmtKES(s.total)}</td></tr>)}</tbody></table>
         )}
       </div>
       <Dialog open={payOpen} onClose={() => setPayOpen(false)} title="Receive payment">
@@ -123,11 +125,11 @@ export function CreditAgeing() {
   if (loading || !data) return <div className="h-24 bg-cream-deep skeleton-pulse rounded-panel" />;
   const debtors = data.filter(c => c.balance > 0);
   return (
-    <div className="bg-paper border border-sand rounded-panel p-4">
+    <div className="panel p-4">
       <h2 className="text-[17px] font-semibold mb-3">Credit ageing</h2>
-      <table className="w-full text-[15px]">
-        <thead><tr className="bg-cream-deep text-left"><th className="p-2">Customer</th><th className="p-2">Balance</th><th className="p-2">Ageing</th></tr></thead>
-        <tbody>{debtors.map(c => <tr key={c.id} className="border-t border-sand"><td className="p-2">{c.name}</td><td className="p-2 num">{fmtKES(c.balance)}</td><td className="p-2">{c.balance > 40000 ? 'Over 60 days' : c.balance > 20000 ? '30 days' : 'Current'}</td></tr>)}</tbody>
+      <table className="table-base">
+        <thead><tr><th>Customer</th><th>Balance</th><th>Ageing</th></tr></thead>
+        <tbody>{debtors.map(c => <tr key={c.id}><td>{c.name}</td><td className="p-2 num">{fmtKES(c.balance)}</td><td>{c.balance > 40000 ? 'Over 60 days' : c.balance > 20000 ? '30 days' : 'Current'}</td></tr>)}</tbody>
       </table>
       <p className="text-[13px] text-ink-muted mt-2">Total outstanding: {fmtKES(sum(debtors.map(c => c.balance)))}</p>
     </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAsync, Button, Input, Select, Dialog, Badge, Tabs, EmptyState, Alert } from '../../components/ui';
+import { useAsync, Button, Input, Select, Dialog, Badge, Tabs, EmptyState, Alert, PageHeader } from '../../components/ui';
 import { api } from '../../api';
 import { fmtKES, fmtDate, todayISO, sum } from '../../lib/utils';
 import { useSession } from '../../lib/store';
@@ -43,19 +43,19 @@ export function LabourPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[24px] font-bold">Labour</h1>
+      <PageHeader title="Labour" subtitle="Employees, attendance, tasks, leave and payroll." />
       <Tabs tabs={[{ id: 'employees', label: 'Employees' }, { id: 'attendance', label: 'Attendance' }, { id: 'tasks', label: 'Tasks' }, { id: 'leave', label: 'Leave' }, { id: 'payroll', label: 'Payroll' }]} active={tab} onChange={setTab} />
 
       {tab === 'employees' && (
-        <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-          <table className="w-full text-[15px] min-w-[720px]">
-            <thead><tr className="bg-cream-deep text-left"><th className="p-3">Name</th><th className="p-3">Role</th><th className="p-3">Phone</th><th className="p-3">ID number</th>{!isEntry && <th className="p-3">Salary</th>}<th className="p-3">Start date</th><th className="p-3">Status</th></tr></thead>
+        <div className="panel overflow-x-auto">
+          <table className="table-base min-w-[720px]">
+            <thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>ID number</th>{!isEntry && <th>Salary</th>}<th>Start date</th><th>Status</th></tr></thead>
             <tbody>
               {data.employees.map(e => (
-                <tr key={e.id} className="border-t border-sand">
-                  <td className="p-3 font-medium">{e.name}</td><td className="p-3">{e.role}</td><td className="p-3 num">{e.phone}</td><td className="p-3 num">{e.nationalId}</td>
-                  {!isEntry && <td className="p-3 num">{fmtKES(e.salary)}</td>}<td className="p-3">{fmtDate(e.startDate)}</td>
-                  <td className="p-3"><Badge tone={e.status === 'active' ? 'success' : 'neutral'}>{e.status}</Badge></td>
+                <tr key={e.id}>
+                  <td className="font-medium">{e.name}</td><td>{e.role}</td><td className="num">{e.phone}</td><td className="num">{e.nationalId}</td>
+                  {!isEntry && <td className="num">{fmtKES(e.salary)}</td>}<td>{fmtDate(e.startDate)}</td>
+                  <td><Badge tone={e.status === 'active' ? 'success' : 'neutral'}>{e.status}</Badge></td>
                 </tr>
               ))}
             </tbody>
@@ -65,7 +65,7 @@ export function LabourPage() {
 
       {tab === 'attendance' && (
         <div className="space-y-4">
-          <div className="bg-paper border border-sand rounded-panel p-4">
+          <div className="panel p-4">
             <h2 className="text-[17px] font-semibold mb-3">Mark today</h2>
             <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             <div className="mt-4 space-y-2">
@@ -84,14 +84,14 @@ export function LabourPage() {
             </div>
             <Button onClick={markAll} className="mt-4">Save attendance</Button>
           </div>
-          <div className="bg-paper border border-sand rounded-panel p-4">
+          <div className="panel p-4">
             <div className="flex items-center gap-3 mb-3"><h2 className="text-[17px] font-semibold">Month grid</h2><Input label="Month" type="month" value={month} onChange={(e) => setMonth(e.target.value)} /></div>
             <div className="overflow-x-auto">
               <table className="text-[13px] min-w-[800px]">
                 <thead><tr><th className="p-1 text-left">Employee</th>{Array.from({ length: 31 }, (_, i) => <th key={i} className="p-1 num">{i + 1}</th>)}</tr></thead>
                 <tbody>
                   {data.employees.map(e => (
-                    <tr key={e.id} className="border-t border-sand">
+                    <tr key={e.id}>
                       <td className="p-1 whitespace-nowrap">{e.name.split(' ')[0]}</td>
                       {Array.from({ length: 31 }, (_, i) => {
                         const d = `${month}-${String(i + 1).padStart(2, '0')}`;
@@ -112,15 +112,15 @@ export function LabourPage() {
         <div className="space-y-3">
           <Button onClick={() => setTaskOpen(true)}>Assign task</Button>
           {data.tasks.length === 0 ? <EmptyState title="No tasks" body="Assign daily tasks here." /> : (
-            <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-              <table className="w-full text-[15px] min-w-[560px]">
-                <thead><tr className="bg-cream-deep text-left"><th className="p-3">Date</th><th className="p-3">Task</th><th className="p-3">Employee</th><th className="p-3">Done</th></tr></thead>
+            <div className="panel overflow-x-auto">
+              <table className="table-base min-w-[560px]">
+                <thead><tr><th>Date</th><th>Task</th><th>Employee</th><th>Done</th></tr></thead>
                 <tbody>
                   {[...data.tasks].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 40).map(t => (
-                    <tr key={t.id} className="border-t border-sand">
-                      <td className="p-3">{fmtDate(t.date)}</td><td className="p-3">{t.title} ({t.type})</td>
-                      <td className="p-3">{data.employees.find(e => e.id === t.employeeId)?.name || '—'}</td>
-                      <td className="p-3"><button onClick={async () => { await api.saveTask({ ...t, done: !t.done }); reload(); }} className="min-h-[44px] px-3 rounded-input border border-sand">{t.done ? 'Done' : 'Mark done'}</button></td>
+                    <tr key={t.id}>
+                      <td>{fmtDate(t.date)}</td><td>{t.title} ({t.type})</td>
+                      <td>{data.employees.find(e => e.id === t.employeeId)?.name || '—'}</td>
+                      <td><button onClick={async () => { await api.saveTask({ ...t, done: !t.done }); reload(); }} className="min-h-[44px] px-3 rounded-input border border-sand">{t.done ? 'Done' : 'Mark done'}</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -131,10 +131,10 @@ export function LabourPage() {
       )}
 
       {tab === 'leave' && (
-        <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-          <table className="w-full text-[15px] min-w-[560px]">
-            <thead><tr className="bg-cream-deep text-left"><th className="p-3">Employee</th><th className="p-3">Type</th><th className="p-3">From</th><th className="p-3">To</th><th className="p-3">Days</th><th className="p-3">Status</th></tr></thead>
-            <tbody>{data.leave.map(l => <tr key={l.id} className="border-t border-sand"><td className="p-3">{data.employees.find(e => e.id === l.employeeId)?.name}</td><td className="p-3">{l.type}</td><td className="p-3">{fmtDate(l.fromDate)}</td><td className="p-3">{fmtDate(l.toDate)}</td><td className="p-3 num">{l.days}</td><td className="p-3"><Badge tone="success">{l.status}</Badge></td></tr>)}</tbody>
+        <div className="panel overflow-x-auto">
+          <table className="table-base min-w-[560px]">
+            <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th></tr></thead>
+            <tbody>{data.leave.map(l => <tr key={l.id}><td>{data.employees.find(e => e.id === l.employeeId)?.name}</td><td>{l.type}</td><td>{fmtDate(l.fromDate)}</td><td>{fmtDate(l.toDate)}</td><td className="num">{l.days}</td><td><Badge tone="success">{l.status}</Badge></td></tr>)}</tbody>
           </table>
         </div>
       )}
@@ -143,7 +143,7 @@ export function LabourPage() {
         isEntry ? <Alert tone="danger">You do not have permission to view payroll. Payroll is visible to owners and managers only.</Alert> : (
           <div className="space-y-3">
             {data.payroll.map(run => (
-              <div key={run.id} className="bg-paper border border-sand rounded-panel p-4">
+              <div key={run.id} className="panel p-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="font-semibold text-[17px]">{run.month}</span>
                   <Badge tone={run.status === 'approved' ? 'success' : 'warning'}>{run.status}</Badge>
@@ -172,12 +172,12 @@ export function LabourPage() {
         {selectedRun && (
           <div className="space-y-4">
             <div className="overflow-x-auto">
-              <table className="w-full text-[15px] min-w-[720px]">
-                <thead><tr className="bg-cream-deep text-left"><th className="p-2">Employee</th><th className="p-2">Basic</th><th className="p-2">Allowances</th><th className="p-2">Advances</th><th className="p-2">PAYE</th><th className="p-2">NHIF</th><th className="p-2">NSSF</th><th className="p-2">Net</th></tr></thead>
+              <table className="table-base min-w-[720px]">
+                <thead><tr><th>Employee</th><th>Basic</th><th>Allowances</th><th>Advances</th><th>PAYE</th><th>NHIF</th><th>NSSF</th><th>Net</th></tr></thead>
                 <tbody>
                   {selectedRun.lines.map((l: any) => (
-                    <tr key={l.employeeId} className="border-t border-sand">
-                      <td className="p-2">{data.employees.find(e => e.id === l.employeeId)?.name}</td>
+                    <tr key={l.employeeId}>
+                      <td>{data.employees.find(e => e.id === l.employeeId)?.name}</td>
                       <td className="p-2 num">{fmtKES(l.basic)}</td><td className="p-2 num">{fmtKES(l.allowances)}</td>
                       <td className="p-2 num">{fmtKES(l.advances)}</td><td className="p-2 num">{fmtKES(l.paye)}</td>
                       <td className="p-2 num">{fmtKES(l.nhif)}</td><td className="p-2 num">{fmtKES(l.nssf)}</td>

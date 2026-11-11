@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAsync, Button, Dialog, SearchBar, Select, Alert, Pagination } from '../../components/ui';
+import { useAsync, Button, Dialog, SearchBar, Select, Alert, Pagination, PageHeader } from '../../components/ui';
 import { api } from '../../api';
 import { fmtDateTime } from '../../lib/utils';
 import { useSession } from '../../lib/store';
@@ -22,20 +22,20 @@ export function AuditPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[24px] font-bold">Audit log</h1>
+      <PageHeader title="Audit log" subtitle="Every change made in the system, with who made it and when." />
       <div className="grid md:grid-cols-2 gap-3">
         <SearchBar value={q} onChange={setQ} placeholder="Search user or record" />
         <Select value={module} onChange={(e) => setModule(e.target.value)} options={[{ value: 'all', label: 'All modules' }, ...modules.map(m => ({ value: m, label: m }))]} />
       </div>
-      <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-        <table className="w-full text-[15px] min-w-[720px]">
-          <thead><tr className="bg-cream-deep text-left"><th className="p-3">When</th><th className="p-3">Who</th><th className="p-3">Action</th><th className="p-3">Module</th><th className="p-3">Record</th><th className="p-3">Details</th></tr></thead>
+      <div className="panel overflow-x-auto">
+        <table className="table-base min-w-[720px]">
+          <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Module</th><th>Record</th><th>Details</th></tr></thead>
           <tbody>
             {pageRows.map(a => (
-              <tr key={a.id} className="border-t border-sand">
-                <td className="p-3 num whitespace-nowrap">{fmtDateTime(a.at)}</td><td className="p-3">{a.user}</td>
-                <td className="p-3">{a.action}</td><td className="p-3">{a.module}</td><td className="p-3">{a.record}</td>
-                <td className="p-3"><button className="text-forest font-semibold min-h-[44px] px-2" onClick={() => setSelected(a)}>View change</button></td>
+              <tr key={a.id}>
+                <td className="num whitespace-nowrap">{fmtDateTime(a.at)}</td><td>{a.user}</td>
+                <td>{a.action}</td><td>{a.module}</td><td>{a.record}</td>
+                <td><button className="text-forest font-semibold min-h-[44px] px-2" onClick={() => setSelected(a)}>View change</button></td>
               </tr>
             ))}
           </tbody>

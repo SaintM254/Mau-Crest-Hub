@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useAsync, Button, Input, Select, Badge, Alert, EmptyState, Tabs } from '../../components/ui';
+import { Segmented, useAsync, Button, Input, Select, Badge, Alert, EmptyState, Tabs, PageHeader } from '../../components/ui';
 import { api } from '../../api';
 import { fmtL, fmtDate, todayISO, sum, uid } from '../../lib/utils';
 import { useSession } from '../../lib/store';
@@ -74,46 +74,49 @@ export function MilkPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[24px] font-bold">Milk</h1>
+      <PageHeader title="Milk" subtitle="Three sessions a day, per cow or per batch, with usage reconciliation." />
       <Tabs tabs={[{ id: 'entry', label: 'Daily entry' }, { id: 'usage', label: 'Milk usage' }, { id: 'history', label: 'History' }]} active={tab} onChange={setTab} />
 
       {tab === 'entry' && (
         <div className="space-y-4">
           <div className="grid md:grid-cols-3 gap-3">
             <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            <div>
-              <span className="block text-[15px] font-medium mb-1">Session</span>
-              <div className="grid grid-cols-3 gap-2">
-                {(['morning', 'midday', 'evening'] as const).map(s => {
-                  const done = data.milk.some(m => m.date === date && m.session === s);
-                  return <button key={s} onClick={() => setSession(s)} className={`min-h-[48px] rounded-input border font-semibold capitalize text-[15px] ${session === s ? 'bg-forest text-cream border-forest' : 'bg-paper border-sand'}`}>{s}{done ? ' ✓' : ''}</button>;
-                })}
-              </div>
-            </div>
+            <Segmented
+              label="Session"
+              value={session}
+              onChange={setSession}
+              options={(['morning', 'midday', 'evening'] as const).map(s => ({
+                value: s,
+                label: s,
+                meta: data.milk.some(m => m.date === date && m.session === s) ? 'saved' : undefined
+              }))}
+            />
             <Select label="Milked by" value={milkedBy} onChange={(e) => setMilkedBy(e.target.value)} options={[{ value: '', label: 'Choose employee' }, ...data.employees.map(e => ({ value: e.id, label: e.name }))]} />
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="inline-flex border border-sand rounded-input overflow-hidden">
-              <button onClick={() => setMode('percow')} className={`min-h-[44px] px-4 font-semibold text-[15px] ${mode === 'percow' ? 'bg-forest text-cream' : 'bg-paper'}`}>Per cow</button>
-              <button onClick={() => setMode('batch')} className={`min-h-[44px] px-4 font-semibold text-[15px] ${mode === 'batch' ? 'bg-forest text-cream' : 'bg-paper'}`}>Per batch</button>
-            </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Segmented
+              className="w-full sm:w-auto"
+              value={mode}
+              onChange={setMode}
+              options={[{ value: 'percow' as const, label: 'Per cow' }, { value: 'batch' as const, label: 'Per batch' }]}
+            />
             {mode === 'percow' && <Button variant="secondary" onClick={copyYesterday}>Copy from yesterday</Button>}
             <div className="ml-auto text-[17px] font-bold num">Total: {fmtL(mode === 'percow' ? runningTotal : Number(batchLitres) || 0)}</div>
           </div>
 
           {mode === 'percow' ? (
-            <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-              <table className="w-full text-[15px] min-w-[560px]">
-                <thead><tr className="bg-cream-deep text-left"><th className="p-3">Cow</th><th className="p-3">Litres</th><th className="p-3">Note</th></tr></thead>
+            <div className="panel overflow-x-auto">
+              <table className="table-base min-w-[560px]">
+                <thead><tr><th>Cow</th><th>Litres</th><th>Note</th></tr></thead>
                 <tbody>
                   {lactating.map(a => {
                     const inWd = withdrawalIds.has(a.id);
                     return (
-                      <tr key={a.id} className="border-t border-sand">
-                        <td className="p-3"><span className="font-medium">{a.tag} — {a.name}</span>{inWd && <span className="ml-2"><Badge tone="warning">In withdrawal</Badge></span>}</td>
-                        <td className="p-3"><input inputMode="decimal" type="number" step="any" min="0" value={perCow[a.id] || ''} onChange={(e) => setPerCow({ ...perCow, [a.id]: e.target.value })} className="w-32 min-h-[44px] px-3 rounded-input border border-sand bg-paper text-[15px] num" aria-label={`Litres for ${a.tag}`} /></td>
-                        <td className="p-3 text-[13px] text-ink-muted">{inWd ? 'Milk from this cow is not sold.' : ''}</td>
+                      <tr key={a.id}>
+                        <td><span className="font-medium">{a.tag} — {a.name}</span>{inWd && <span className="ml-2"><Badge tone="warning">In withdrawal</Badge></span>}</td>
+                        <td><input inputMode="decimal" type="number" step="any" min="0" value={perCow[a.id] || ''} onChange={(e) => setPerCow({ ...perCow, [a.id]: e.target.value })} className="w-32 min-h-[44px] px-3 rounded-input border border-sand bg-paper text-[15px] num" aria-label={`Litres for ${a.tag}`} /></td>
+                        <td className="text-[13px] text-ink-muted">{inWd ? 'Milk from this cow is not sold.' : ''}</td>
                       </tr>
                     );
                   })}
@@ -121,12 +124,12 @@ export function MilkPage() {
               </table>
             </div>
           ) : (
-            <div className="bg-paper border border-sand rounded-panel p-4 max-w-md">
+            <div className="panel p-4 max-w-md">
               <Input label="Total litres for this session" type="number" inputMode="decimal" value={batchLitres} onChange={(e) => setBatchLitres(e.target.value)} />
             </div>
           )}
 
-          <div className="bg-paper border border-sand rounded-panel p-4 grid md:grid-cols-4 gap-3">
+          <div className="panel p-4 grid md:grid-cols-4 gap-3">
             <Input label="Fat %" type="number" inputMode="decimal" value={fat} onChange={(e) => setFat(e.target.value)} />
             <Input label="SCC (cells/ml)" type="number" value={scc} onChange={(e) => setScc(e.target.value)} />
             <Input label="Spoilage (L)" type="number" inputMode="decimal" value={spoilage} onChange={(e) => setSpoilage(e.target.value)} />
@@ -144,7 +147,7 @@ export function MilkPage() {
       {tab === 'usage' && (
         <div className="space-y-4">
           <UsageForm date={date} existing={usageDay} onSaved={reload} />
-          <div className="bg-paper border border-sand rounded-panel p-4">
+          <div className="panel p-4">
             <h2 className="text-[17px] font-semibold mb-3">Reconciliation for {fmtDate(date)}</h2>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-[15px]">
               <div><div className="text-ink-muted text-[13px]">Produced</div><div className="num font-bold">{fmtL(produced)}</div></div>
@@ -162,16 +165,16 @@ export function MilkPage() {
         <div className="space-y-4">
           <Button variant="secondary" onClick={() => exportExcel('milk-history', data.milk.slice(0, 200).map(m => ({ Date: m.date, Session: m.session, Litres: m.totalLitres, Fat: m.fat, SCC: m.scc })))}>Export history</Button>
           {data.milk.length === 0 ? <EmptyState title="No milk records" body="Record milk from the Daily entry tab." /> : (
-            <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-              <table className="w-full text-[15px] min-w-[560px]">
-                <thead><tr className="bg-cream-deep text-left"><th className="p-3">Date</th><th className="p-3">Session</th><th className="p-3">Litres</th><th className="p-3">Fat %</th><th className="p-3">SCC</th><th className="p-3">Milked by</th></tr></thead>
+            <div className="panel overflow-x-auto">
+              <table className="table-base min-w-[560px]">
+                <thead><tr><th>Date</th><th>Session</th><th>Litres</th><th>Fat %</th><th>SCC</th><th>Milked by</th></tr></thead>
                 <tbody>
                   {[...data.milk].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 60).map(m => (
-                    <tr key={m.id} className="border-t border-sand">
-                      <td className="p-3">{fmtDate(m.date)}</td><td className="p-3 capitalize">{m.session}</td>
-                      <td className="p-3 num">{fmtL(m.totalLitres)}</td><td className="p-3 num">{m.fat}%</td>
-                      <td className="p-3 num">{m.scc.toLocaleString()}{m.scc > 500000 ? <span className="ml-2"><Badge tone="danger">High SCC</Badge></span> : ''}</td>
-                      <td className="p-3">{data.employees.find(e => e.id === m.milkedBy)?.name || '—'}</td>
+                    <tr key={m.id}>
+                      <td>{fmtDate(m.date)}</td><td className="capitalize">{m.session}</td>
+                      <td className="num">{fmtL(m.totalLitres)}</td><td className="num">{m.fat}%</td>
+                      <td className="num">{m.scc.toLocaleString()}{m.scc > 500000 ? <span className="ml-2"><Badge tone="danger">High SCC</Badge></span> : ''}</td>
+                      <td>{data.employees.find(e => e.id === m.milkedBy)?.name || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -195,7 +198,7 @@ function UsageForm({ date, existing, onSaved }: { date: string; existing: any; o
     onSaved();
   };
   return (
-    <div className="bg-paper border border-sand rounded-panel p-4 grid md:grid-cols-4 gap-3 items-end">
+    <div className="panel p-4 grid md:grid-cols-4 gap-3 items-end">
       <Input label="To calves (L)" type="number" inputMode="decimal" value={calves} onChange={(e) => setCalves(e.target.value)} />
       <Input label="Home use (L)" type="number" inputMode="decimal" value={home} onChange={(e) => setHome(e.target.value)} />
       <Input label="Wasted (L)" type="number" inputMode="decimal" value={wasted} onChange={(e) => setWasted(e.target.value)} />

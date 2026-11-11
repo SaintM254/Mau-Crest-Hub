@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAsync, Button, Select, Input, Badge, Alert } from '../../components/ui';
+import { useAsync, Button, Select, Input, Badge, Alert, PageHeader } from '../../components/ui';
 import { api } from '../../api';
 import { fmtKES, fmtDate, sum } from '../../lib/utils';
 import { useSession } from '../../lib/store';
@@ -95,7 +95,7 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[24px] font-bold">Reports</h1>
+      <PageHeader title="Reports" subtitle="Choose a report and date range, then export to Excel or PDF." />
       <div className="grid md:grid-cols-4 gap-3">
         <Select label="Report" value={report} onChange={(e) => setReport(e.target.value)} options={REPORTS.map(r => ({ value: r.id, label: r.label }))} />
         <Select label="Date preset" value={preset} onChange={(e) => setPreset(e.target.value)} options={[{ value: 'today', label: 'Today' }, { value: '7days', label: 'Last 7 days' }, { value: 'month', label: 'This month' }, { value: 'lastmonth', label: 'Last month' }, { value: 'custom', label: 'Custom' }]} />
@@ -105,12 +105,12 @@ export function ReportsPage() {
         <Button onClick={() => exportExcel(report + '-report', out.excel)}>Export to Excel</Button>
         <Button variant="secondary" onClick={() => exportPdf(report + '-report', REPORTS.find(x => x.id === report)?.label || 'Report', out.headers, out.rows)}>Export to PDF</Button>
       </div>
-      <div className="bg-paper border border-sand rounded-panel p-4">
+      <div className="panel p-4">
         <h2 className="text-[17px] font-semibold mb-3">{REPORTS.find(x => x.id === report)?.label} — preview</h2>
         <div className="overflow-x-auto">
-          <table className="w-full text-[15px]">
-            <thead><tr className="bg-cream-deep text-left">{out.headers.map(h => <th key={h} className="p-2">{h}</th>)}</tr></thead>
-            <tbody>{out.rows.slice(0, 30).map((row, i) => <tr key={i} className="border-t border-sand">{row.map((c, j) => <td key={j} className="p-2 num">{c}</td>)}</tr>)}</tbody>
+          <table className="table-base">
+            <thead><tr>{out.headers.map(h => <th key={h} className="p-2">{h}</th>)}</tr></thead>
+            <tbody>{out.rows.slice(0, 30).map((row, i) => <tr key={i}>{row.map((c, j) => <td key={j} className="p-2 num">{c}</td>)}</tr>)}</tbody>
           </table>
         </div>
         <p className="text-[13px] text-ink-muted mt-2">{out.rows.length} rows. Showing first 30.</p>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAsync, Button, Input, Select, Badge, Alert, Switch, Dialog, ConfirmDialog, Tabs } from '../../components/ui';
+import { useAsync, Button, Input, Select, Badge, Alert, Switch, Dialog, ConfirmDialog, Tabs, PageHeader } from '../../components/ui';
 import { api } from '../../api';
 import { fmtDate, fmtKES } from '../../lib/utils';
 import { useSession } from '../../lib/store';
@@ -39,11 +39,11 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[24px] font-bold">Settings</h1>
+      <PageHeader title="Settings" subtitle="Farm details, prices, integrations, users and backups." />
       <Tabs tabs={[{ id: 'farm', label: 'Farm and prices' }, { id: 'integrations', label: 'M-Pesa, SMS and reminders' }, { id: 'payroll', label: 'Payroll rates' }, { id: 'users', label: 'Users and permissions' }, { id: 'backup', label: 'Backups' }, { id: 'demo', label: 'Demo and role' }]} active={tab} onChange={setTab} />
 
       {tab === 'farm' && (
-        <div className="bg-paper border border-sand rounded-panel p-4 space-y-4 max-w-2xl">
+        <div className="panel p-4 space-y-4 max-w-2xl">
           <Input label="Farm name" value={s.farmName || ''} onChange={(e) => set('farmName', e.target.value)} />
           <Input label="Location" value={s.location || ''} onChange={(e) => set('location', e.target.value)} />
           <Input label="Farm phone" value={s.phone || ''} onChange={(e) => set('phone', e.target.value)} />
@@ -59,7 +59,7 @@ export function SettingsPage() {
       )}
 
       {tab === 'integrations' && (
-        <div className="bg-paper border border-sand rounded-panel p-4 space-y-4 max-w-2xl">
+        <div className="panel p-4 space-y-4 max-w-2xl">
           <Input label="M-Pesa Till number" value={s.tillNumber || ''} onChange={(e) => set('tillNumber', e.target.value)} />
           <Input label="M-Pesa Paybill number" value={s.paybillNumber || ''} onChange={(e) => set('paybillNumber', e.target.value)} />
           <div><Badge tone="success">M-Pesa: Connected (mock)</Badge></div>
@@ -72,7 +72,7 @@ export function SettingsPage() {
       )}
 
       {tab === 'payroll' && (
-        <div className="bg-paper border border-sand rounded-panel p-4 space-y-4 max-w-2xl">
+        <div className="panel p-4 space-y-4 max-w-2xl">
           <Alert tone="warning">Statutory rates are placeholders to be confirmed with your accountant.</Alert>
           <Input label="PAYE rate (%)" type="number" value={s.payeRate || ''} onChange={(e) => set('payeRate', Number(e.target.value))} />
           <Input label="NHIF rate (%)" type="number" value={s.nhifRate || ''} onChange={(e) => set('nhifRate', Number(e.target.value))} />
@@ -84,15 +84,15 @@ export function SettingsPage() {
       {tab === 'users' && (
         <div className="space-y-4">
           <div className="flex gap-3"><Button onClick={() => setUserOpen(true)}>Add user</Button></div>
-          <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-            <table className="w-full text-[15px] min-w-[640px]">
-              <thead><tr className="bg-cream-deep text-left"><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Role</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>
+          <div className="panel overflow-x-auto">
+            <table className="table-base min-w-[640px]">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 {data.users.map(u => (
-                  <tr key={u.id} className="border-t border-sand">
-                    <td className="p-3">{u.name}</td><td className="p-3">{u.email}</td><td className="p-3 capitalize">{u.role}</td>
-                    <td className="p-3"><Badge tone={u.active ? 'success' : 'neutral'}>{u.active ? 'Active' : 'Inactive'}</Badge></td>
-                    <td className="p-3">
+                  <tr key={u.id}>
+                    <td>{u.name}</td><td>{u.email}</td><td className="capitalize">{u.role}</td>
+                    <td><Badge tone={u.active ? 'success' : 'neutral'}>{u.active ? 'Active' : 'Inactive'}</Badge></td>
+                    <td>
                       <button className="text-forest font-semibold min-h-[44px] px-2" onClick={async () => { await api.saveUser({ ...u, active: !u.active }); reload(); }}>{u.active ? 'Deactivate' : 'Activate'}</button>
                       <button className="text-forest font-semibold min-h-[44px] px-2" onClick={async () => { await api.saveUser({ ...u, password: 'reset123' }); pushToast('Password reset to reset123'); }}>Reset password</button>
                     </td>
@@ -101,14 +101,14 @@ export function SettingsPage() {
               </tbody>
             </table>
           </div>
-          <div className="bg-paper border border-sand rounded-panel p-4 overflow-x-auto">
+          <div className="panel p-4 overflow-x-auto">
             <h2 className="text-[17px] font-semibold mb-3">Permission matrix</h2>
-            <table className="w-full text-[15px] min-w-[800px]">
-              <thead><tr className="bg-cream-deep text-left"><th className="p-2">Module</th>{['owner', 'manager', 'entry'].map(r => <th key={r} className="p-2 capitalize" colSpan={4}>{r}</th>)}</tr>
-              <tr className="bg-cream-deep text-left"><th className="p-2"></th>{['owner', 'manager', 'entry'].map(r => <>{['View', 'Create', 'Edit', 'Delete'].map(a => <th key={r + a} className="p-2">{a}</th>)}</>)}</tr></thead>
+            <table className="table-base min-w-[800px]">
+              <thead><tr><th>Module</th>{['owner', 'manager', 'entry'].map(r => <th key={r} className="p-2 capitalize" colSpan={4}>{r}</th>)}</tr>
+              <tr><th></th>{['owner', 'manager', 'entry'].map(r => <>{['View', 'Create', 'Edit', 'Delete'].map(a => <th key={r + a} className="p-2">{a}</th>)}</>)}</tr></thead>
               <tbody>
                 {[...new Set(data.perms.map(p => p.module))].map(mod => (
-                  <tr key={mod} className="border-t border-sand">
+                  <tr key={mod}>
                     <td className="p-2 capitalize">{mod}</td>
                     {['owner', 'manager', 'entry'].map(role => {
                       const p = data.perms.find(x => x.role === role && x.module === mod);
@@ -131,17 +131,17 @@ export function SettingsPage() {
             <Button onClick={async () => { await api.backupNow(); pushToast('Backup complete'); reload(); }}>Back up now</Button>
             <Button variant="secondary" onClick={() => pushToast('Restore requested (mock)')}>Request restore</Button>
           </div>
-          <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-            <table className="w-full text-[15px]">
-              <thead><tr className="bg-cream-deep text-left"><th className="p-3">Date</th><th className="p-3">Size</th><th className="p-3">Status</th></tr></thead>
-              <tbody>{[...data.backups].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30).map(b => <tr key={b.id} className="border-t border-sand"><td className="p-3">{fmtDate(b.date)}</td><td className="p-3 num">{b.size}</td><td className="p-3"><Badge tone={b.status === 'success' ? 'success' : b.status === 'failed' ? 'danger' : 'warning'}>{b.status}</Badge></td></tr>)}</tbody>
+          <div className="panel overflow-x-auto">
+            <table className="table-base">
+              <thead><tr><th>Date</th><th>Size</th><th>Status</th></tr></thead>
+              <tbody>{[...data.backups].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30).map(b => <tr key={b.id}><td>{fmtDate(b.date)}</td><td className="num">{b.size}</td><td><Badge tone={b.status === 'success' ? 'success' : b.status === 'failed' ? 'danger' : 'warning'}>{b.status}</Badge></td></tr>)}</tbody>
             </table>
           </div>
         </div>
       )}
 
       {tab === 'demo' && (
-        <div className="bg-paper border border-sand rounded-panel p-4 space-y-4 max-w-2xl">
+        <div className="panel p-4 space-y-4 max-w-2xl">
           <Switch label="Simulate offline mode" checked={simulateOffline} onChange={(e) => setSimulateOffline(e.target.checked)} />
           <p className="text-[15px] text-ink-muted">Turn this on to see the offline chip and sync behaviour. Changes are saved on this device.</p>
           <div className="border-t border-sand pt-4">
