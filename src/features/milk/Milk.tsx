@@ -85,11 +85,7 @@ export function MilkPage() {
               label="Session"
               value={session}
               onChange={setSession}
-              options={(['morning', 'midday', 'evening'] as const).map(s => ({
-                value: s,
-                label: s,
-                meta: data.milk.some(m => m.date === date && m.session === s) ? 'saved' : undefined
-              }))}
+              options={(['morning', 'midday', 'evening'] as const).map(s => ({ value: s, label: s }))}
             />
             <Select label="Milked by" value={milkedBy} onChange={(e) => setMilkedBy(e.target.value)} options={[{ value: '', label: 'Choose employee' }, ...data.employees.map(e => ({ value: e.id, label: e.name }))]} />
           </div>

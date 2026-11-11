@@ -75,14 +75,14 @@ export function DesignSystem() {
         </div>
       </Section>
 
-      <Section title="Segmented control" note="For two to four mutually exclusive choices, such as milk session or entry mode.">
+      <Section title="Segmented control" note="For two to four mutually exclusive choices, such as milk session or entry mode. Labels always fit inside the pill.">
         <div className="space-y-3 max-w-lg">
           <Segmented
             label="Session"
             value={segment}
             onChange={setSegment}
             options={[
-              { value: 'morning' as const, label: 'Morning', meta: 'saved' },
+              { value: 'morning' as const, label: 'Morning' },
               { value: 'midday' as const, label: 'Midday' },
               { value: 'evening' as const, label: 'Evening' }
             ]}

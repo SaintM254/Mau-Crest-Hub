@@ -85,6 +85,21 @@ export function SalesPage() {
 
   const filtered = data.sales.filter(s => !filter || s.customerName.toLowerCase().includes(filter.toLowerCase()) || s.receiptNo.includes(filter));
 
+  /* The sale just recorded is always shown first, then the rest newest first. */
+  const justRecordedId = receipt?.id;
+  const orderedSales = (() => {
+    const sorted = [...filtered].sort((a, b) => {
+      if (a.date !== b.date) return b.date.localeCompare(a.date);
+      // Same day, newest record id first. Record ids sort by creation time.
+      return String(b.id).localeCompare(String(a.id));
+    });
+    if (!justRecordedId) return sorted;
+    const idx = sorted.findIndex(s => s.id === justRecordedId);
+    if (idx <= 0) return sorted;
+    const [picked] = sorted.splice(idx, 1);
+    return [picked, ...sorted];
+  })();
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -153,29 +168,67 @@ export function SalesPage() {
 
         {/* Receipt + cash-up */}
         <div className="space-y-4">
-          <section className="panel p-4">
-            <h2 className="text-[17px] font-semibold mb-3">Receipt</h2>
+          <section className="panel p-4 md:p-5">
+            <div className="panel-header">
+              <div>
+                <h2 className="panel-title">Receipt</h2>
+                <p className="panel-sub">Shown after a sale is recorded.</p>
+              </div>
+              {receipt && (
+                <div className="flex flex-wrap justify-end gap-2 no-print">
+                  <Button size="sm" variant="secondary" onClick={() => printArea(document.querySelector('.receipt-print')?.outerHTML || '')}>Print</Button>
+                  <Button size="sm" variant="secondary" onClick={async () => { await api.sendMessage({ channel: 'sms', to: phone || '0712 345 678', body: `Receipt ${receipt.receiptNo}: ${fmtL(receipt.litres)} for ${fmtKES(receipt.total)}. Thank you.` }); pushToast('Receipt sent by SMS'); }}>Send by SMS</Button>
+                  <Button size="sm" variant="secondary" onClick={async () => { await api.sendMessage({ channel: 'email', to: 'customer@example.co.ke', body: `Receipt ${receipt.receiptNo}` }); pushToast('Receipt sent by email'); }}>Send by email</Button>
+                </div>
+              )}
+            </div>
+
             {receipt ? (
-              <div className="receipt-print border border-sand p-4 bg-paper">
-                <div className="text-center font-bold">Mau Crest Dairies</div>
-                <div className="text-center text-[13px]">Molo, Nakuru County · 0712 345 678</div>
-                <div className="text-center text-[13px]">Nurtured by Nature, Delivered Fresh</div>
-                <hr className="my-2 border-sand" />
-                <div className="flex justify-between"><span>Receipt</span><span className="num">{receipt.receiptNo}</span></div>
-                <div className="flex justify-between"><span>Date</span><span>{fmtDate(receipt.date)}</span></div>
-                <div className="flex justify-between"><span>Customer</span><span>{receipt.customerName}</span></div>
-                <div className="flex justify-between"><span>{fmtL(receipt.litres)} x {fmtKES(receipt.pricePerLitre)}</span><span className="num">{fmtKES(receipt.total)}</span></div>
-                <div className="flex justify-between font-bold"><span>Total</span><span className="num">{fmtKES(receipt.total)}</span></div>
-                <div className="flex justify-between"><span>Paid by</span><span className="capitalize">{receipt.paymentMethod}</span></div>
-                {receipt.mpesaCode && <div className="flex justify-between"><span>M-Pesa code</span><span className="num">{receipt.mpesaCode}</span></div>}
-                <div className="text-center text-[13px] mt-2">Thank you for buying from Mau Crest Dairies.</div>
-                <div className="flex gap-2 mt-3 no-print">
-                  <Button variant="secondary" onClick={() => printArea(document.querySelector('.receipt-print')?.outerHTML || '')}>Print</Button>
-                  <Button variant="secondary" onClick={async () => { await api.sendMessage({ channel: 'sms', to: phone || '0712 345 678', body: `Receipt ${receipt.receiptNo}: ${fmtL(receipt.litres)} for ${fmtKES(receipt.total)}. Thank you.` }); pushToast('Receipt sent by SMS'); }}>Send by SMS</Button>
-                  <Button variant="secondary" onClick={async () => { await api.sendMessage({ channel: 'email', to: 'customer@example.co.ke', body: `Receipt ${receipt.receiptNo}` }); pushToast('Receipt sent by email'); }}>Send by email</Button>
+              <div className="flex justify-center">
+                <div className="receipt-print w-full max-w-[80mm] border border-sand rounded-panel p-4 bg-paper text-[13px] leading-relaxed">
+                  <div className="text-center font-bold text-[15px]">Mau Crest Dairies</div>
+                  <div className="text-center text-ink-muted">Molo, Nakuru County · 0712 345 678</div>
+                  <div className="text-center text-ink-muted">Nurtured by Nature, Delivered Fresh</div>
+                  <hr className="my-2.5 border-sand" />
+                  <dl className="space-y-1 m-0">
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-ink-muted">Receipt</dt>
+                      <dd className="m-0 num text-right break-all">{receipt.receiptNo}</dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-ink-muted">Date</dt>
+                      <dd className="m-0 text-right">{fmtDate(receipt.date)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-ink-muted shrink-0">Customer</dt>
+                      <dd className="m-0 text-right break-words min-w-0">{receipt.customerName}</dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-ink-muted">{fmtL(receipt.litres)} × {fmtKES(receipt.pricePerLitre)}</dt>
+                      <dd className="m-0 num text-right">{fmtKES(receipt.total)}</dd>
+                    </div>
+                    {receipt.mpesaCode && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-ink-muted">M-Pesa code</dt>
+                        <dd className="m-0 num text-right">{receipt.mpesaCode}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  <hr className="my-2.5 border-sand" />
+                  <div className="flex justify-between gap-3 font-bold text-[15px]">
+                    <span>Total</span>
+                    <span className="num">{fmtKES(receipt.total)}</span>
+                  </div>
+                  <div className="flex justify-between gap-3 mt-1">
+                    <span className="text-ink-muted">Paid by</span>
+                    <span className="capitalize">{receipt.paymentMethod === 'mpesa' ? 'M-Pesa' : receipt.paymentMethod}</span>
+                  </div>
+                  <p className="text-center mt-3 mb-0 text-ink-muted">Thank you for buying from Mau Crest Dairies.</p>
                 </div>
               </div>
-            ) : <p className="text-[15px] text-ink-muted">Record a sale to see the receipt here.</p>}
+            ) : (
+              <p className="text-[15px] text-ink-muted">Record a sale to see the receipt here.</p>
+            )}
           </section>
 
           <section className="panel p-4">
@@ -200,7 +253,9 @@ export function SalesPage() {
             <table className="table-base min-w-[720px]">
               <thead><tr><th>Receipt</th><th>Date</th><th>Customer</th><th>Litres</th><th>Total</th><th>Method</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
-                {[...filtered].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 40).map(s => (
+                {orderedSales
+                  .slice(0, 40)
+                  .map(s => (
                   <tr key={s.id}>
                     <td className="num">{s.receiptNo}</td><td>{fmtDate(s.date)}</td><td>{s.customerName}</td>
                     <td className="num">{fmtL(s.litres)}</td><td className="num">{fmtKES(s.total)}</td>
@@ -208,7 +263,7 @@ export function SalesPage() {
                     <td><Badge tone={s.status === 'completed' ? 'success' : 'danger'}>{s.status}</Badge></td>
                     <td>{s.status === 'completed' && <button className="text-danger font-semibold min-h-[44px] px-2" onClick={() => setVoidSale(s)}>Void</button>}</td>
                   </tr>
-                ))}
+                  ))}
               </tbody>
             </table>
           </div>

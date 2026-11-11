@@ -527,7 +527,7 @@ export function SearchBar({
 export function Segmented<T extends string>({
   options, value, onChange, label, className = ''
 }: {
-  options: { value: T; label: string; meta?: string }[];
+  options: { value: T; label: string }[];
   value: T;
   onChange: (v: T) => void;
   label?: string;
@@ -549,19 +549,14 @@ export function Segmented<T extends string>({
               type="button"
               aria-pressed={active}
               onClick={() => onChange(o.value)}
-              className={`flex-1 min-h-[40px] px-3 rounded-pill text-[15px] font-semibold capitalize whitespace-nowrap
-                transition-colors duration-150 ${
+              className={`flex-1 min-w-0 min-h-[40px] px-2 sm:px-3 rounded-pill text-[15px] font-semibold capitalize
+                truncate transition-colors duration-150 ${
                   active
                     ? 'bg-forest text-cream'
                     : 'bg-transparent text-ink-muted hover:bg-cream-deep hover:text-ink'
                 }`}
             >
               {o.label}
-              {o.meta && (
-                <span className={`ml-1.5 text-[13px] font-normal ${active ? 'text-cream/85' : 'text-ink-muted'}`}>
-                  {o.meta}
-                </span>
-              )}
             </button>
           );
         })}

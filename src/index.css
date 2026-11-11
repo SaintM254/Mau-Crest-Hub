@@ -124,8 +124,18 @@ body {
   .print-area { display: block !important; }
 }
 
-/* Receipt 80mm */
-.receipt-print { width: 80mm; font-size: 12px; }
+/* Receipt, 80mm when printed. On screen it is a readable card. */
+.receipt-print {
+  width: 100%;
+  max-width: 80mm;
+  word-break: break-word;
+}
 @media print {
-  .receipt-print { width: 80mm; }
+  .receipt-print {
+    width: 80mm;
+    max-width: 80mm;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
 }
