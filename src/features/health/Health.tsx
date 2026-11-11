@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAsync, Button, Input, Select, Dialog, Badge, Alert, EmptyState, FileDropzone, Tabs } from '../../components/ui';
+import { useAsync, Button, Input, Select, Dialog, Badge, Alert, EmptyState, FileDropzone, Tabs, PageHeader } from '../../components/ui';
 import { api } from '../../api';
 import { fmtKES, fmtDate, todayISO } from '../../lib/utils';
 import { useSession } from '../../lib/store';
@@ -44,26 +44,28 @@ export function HealthPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-[24px] font-bold">Health</h1>
-        <div className="flex-1" />
-        <Button variant="secondary" onClick={() => exportExcel('health', data.health.map(h => ({ Date: h.date, Type: h.type, Product: h.product, Animals: h.animalIds.length, Cost: h.cost })))}>Export</Button>
-        <Button onClick={() => setOpen(true)}>Add health record</Button>
-      </div>
+      <PageHeader
+        title="Health"
+        subtitle="Vaccinations, treatments, withdrawal periods and reminders."
+        actions={<>
+          <Button variant="secondary" onClick={() => exportExcel('health', data.health.map(h => ({ Date: h.date, Type: h.type, Product: h.product, Animals: h.animalIds.length, Cost: h.cost })))}>Export</Button>
+          <Button onClick={() => setOpen(true)}>Add health record</Button>
+        </>}
+      />
       <Tabs tabs={[{ id: 'records', label: 'Records' }, { id: 'withdrawal', label: 'Withdrawal control' }, { id: 'reminders', label: 'Reminders' }, { id: 'vets', label: 'Vets' }]} active={tab} onChange={setTab} />
 
       {tab === 'records' && (
         data.health.length === 0 ? <EmptyState title="No health records" body="Add vaccinations, treatments and tests here." action={<Button onClick={() => setOpen(true)}>Add health record</Button>} /> : (
-          <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-            <table className="w-full text-[15px] min-w-[720px]">
-              <thead><tr className="bg-cream-deep text-left"><th className="p-3">Date</th><th className="p-3">Type</th><th className="p-3">Product</th><th className="p-3">Animals</th><th className="p-3">By</th><th className="p-3">Cost</th><th className="p-3">Withdrawal</th></tr></thead>
+          <div className="panel overflow-x-auto">
+            <table className="table-base min-w-[720px]">
+              <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Animals</th><th>By</th><th>Cost</th><th>Withdrawal</th></tr></thead>
               <tbody>
                 {[...data.health].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 60).map(h => (
-                  <tr key={h.id} className="border-t border-sand">
-                    <td className="p-3">{fmtDate(h.date)}</td><td className="p-3"><Badge tone="neutral">{h.type}</Badge></td>
-                    <td className="p-3">{h.product}</td><td className="p-3 num">{h.animalIds.length}</td>
-                    <td className="p-3">{h.administeredBy}</td><td className="p-3 num">{fmtKES(h.cost)}</td>
-                    <td className="p-3">{h.withdrawalEnd ? <Badge tone="warning">To {fmtDate(h.withdrawalEnd)}</Badge> : '—'}</td>
+                  <tr key={h.id}>
+                    <td>{fmtDate(h.date)}</td><td><Badge tone="neutral">{h.type}</Badge></td>
+                    <td>{h.product}</td><td className="num">{h.animalIds.length}</td>
+                    <td>{h.administeredBy}</td><td className="num">{fmtKES(h.cost)}</td>
+                    <td>{h.withdrawalEnd ? <Badge tone="warning">To {fmtDate(h.withdrawalEnd)}</Badge> : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -75,7 +77,7 @@ export function HealthPage() {
       {tab === 'withdrawal' && (
         <div className="space-y-3">
           {withdrawalAnimals.size === 0 ? <EmptyState title="No animals in withdrawal" body="Animals in milk withdrawal will be listed here." /> : (
-            <div className="bg-paper border border-sand rounded-panel p-4">
+            <div className="panel p-4">
               <Alert tone="warning">Milk from these animals must not be sold. The milk entry screen marks them.</Alert>
               <ul className="mt-3 divide-y divide-sand">
                 {[...withdrawalAnimals].map(id => {
@@ -91,16 +93,16 @@ export function HealthPage() {
 
       {tab === 'reminders' && (
         <div className="grid md:grid-cols-3 gap-3">
-          <div className="bg-paper border border-sand rounded-panel p-4"><h3 className="font-semibold text-[15px] mb-2">Overdue (3)</h3><ul className="text-[15px] space-y-1"><li>Foot and mouth booster — 12 animals</li><li>Deworming round — dry cows</li><li>CMT test — lactating group</li></ul></div>
-          <div className="bg-paper border border-sand rounded-panel p-4"><h3 className="font-semibold text-[15px] mb-2">Due this week</h3><ul className="text-[15px] space-y-1"><li>Vaccination — calves</li><li>TB test — bulls</li></ul></div>
-          <div className="bg-paper border border-sand rounded-panel p-4"><h3 className="font-semibold text-[15px] mb-2">Due in 14 days (6)</h3><ul className="text-[15px] space-y-1"><li>Pregnancy checks — 8 cows</li><li>Vet visit — general check</li></ul></div>
+          <div className="panel p-4"><h3 className="font-semibold text-[15px] mb-2">Overdue (3)</h3><ul className="text-[15px] space-y-1"><li>Foot and mouth booster — 12 animals</li><li>Deworming round — dry cows</li><li>CMT test — lactating group</li></ul></div>
+          <div className="panel p-4"><h3 className="font-semibold text-[15px] mb-2">Due this week</h3><ul className="text-[15px] space-y-1"><li>Vaccination — calves</li><li>TB test — bulls</li></ul></div>
+          <div className="panel p-4"><h3 className="font-semibold text-[15px] mb-2">Due in 14 days (6)</h3><ul className="text-[15px] space-y-1"><li>Pregnancy checks — 8 cows</li><li>Vet visit — general check</li></ul></div>
         </div>
       )}
 
       {tab === 'vets' && (
-        <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-          <table className="w-full text-[15px]"><thead><tr className="bg-cream-deep text-left"><th className="p-3">Name</th><th className="p-3">Clinic</th><th className="p-3">Phone</th></tr></thead>
-          <tbody>{data.vets.map(v => <tr key={v.id} className="border-t border-sand"><td className="p-3">{v.name}</td><td className="p-3">{v.clinic}</td><td className="p-3 num">{v.phone}</td></tr>)}</tbody></table>
+        <div className="panel overflow-x-auto">
+          <table className="table-base"><thead><tr><th>Name</th><th>Clinic</th><th>Phone</th></tr></thead>
+          <tbody>{data.vets.map(v => <tr key={v.id}><td>{v.name}</td><td>{v.clinic}</td><td className="num">{v.phone}</td></tr>)}</tbody></table>
         </div>
       )}
 

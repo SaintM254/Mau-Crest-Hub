@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAsync, Button, Input, Select, Dialog, Badge, Alert, EmptyState, SearchBar, ConfirmDialog } from '../../components/ui';
+import { useAsync, Button, Input, Select, Dialog, Badge, Alert, EmptyState, SearchBar, ConfirmDialog, PageHeader } from '../../components/ui';
 import { api } from '../../api';
 import { fmtKES, fmtL, fmtDate, todayISO, sum } from '../../lib/utils';
 import { useSession } from '../../lib/store';
@@ -87,16 +87,18 @@ export function SalesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-[24px] font-bold">Sales (POS)</h1>
-        <div className="flex-1" />
-        <Button variant="secondary" onClick={() => setInvoiceOpen(true)}>New invoice</Button>
-        <Button variant="secondary" onClick={() => exportExcel('sales', data.sales.map(s => ({ Receipt: s.receiptNo, Date: s.date, Customer: s.customerName, Litres: s.litres, Total: s.total, Method: s.paymentMethod })))}>Export sales</Button>
-      </div>
+      <PageHeader
+        title="Sales (POS)"
+        subtitle="Record sales, print receipts and invoices, and track credit."
+        actions={<>
+          <Button variant="secondary" onClick={() => setInvoiceOpen(true)}>New invoice</Button>
+          <Button variant="secondary" onClick={() => exportExcel('sales', data.sales.map(s => ({ Receipt: s.receiptNo, Date: s.date, Customer: s.customerName, Litres: s.litres, Total: s.total, Method: s.paymentMethod })))}>Export sales</Button>
+        </>}
+      />
 
       <div className="grid lg:grid-cols-2 gap-4">
         {/* POS */}
-        <section className="bg-paper border border-sand rounded-panel p-4 space-y-4">
+        <section className="panel p-4 space-y-4">
           <h2 className="text-[17px] font-semibold">New sale</h2>
           <Select label="Customer" value={customerId} onChange={(e) => setCustomerId(e.target.value)} options={[{ value: 'walkin', label: 'Walk-in customer' }, ...data.customers.map(c => ({ value: c.id, label: `${c.name} (${c.type}, ${fmtKES(c.pricePerLitre)}/L)` }))]} />
           <div>
@@ -110,10 +112,22 @@ export function SalesPage() {
 
           <div>
             <span className="block text-[15px] font-medium mb-1">Payment method</span>
-            <div className="grid grid-cols-3 gap-2">
-              {(['cash', 'mpesa', 'bank', 'credit', 'split'] as const).map(m => (
-                <button key={m} onClick={() => setMethod(m)} className={`min-h-[48px] rounded-input border font-semibold capitalize text-[15px] ${method === m ? 'bg-forest text-cream border-forest' : 'bg-paper border-sand'}`}>{m}</button>
-              ))}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {(['cash', 'mpesa', 'bank', 'credit', 'split'] as const).map(m => {
+                const active = method === m;
+                return (
+                  <button
+                    key={m}
+                    onClick={() => setMethod(m)}
+                    aria-pressed={active}
+                    className={`min-h-[48px] rounded-input border font-semibold text-[15px] transition-colors duration-150 ${
+                      active ? 'bg-forest text-cream border-forest' : 'bg-paper border-sand text-ink hover:bg-cream-deep'
+                    }`}
+                  >
+                    {m === 'mpesa' ? 'M-Pesa' : m.charAt(0).toUpperCase() + m.slice(1)}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -139,7 +153,7 @@ export function SalesPage() {
 
         {/* Receipt + cash-up */}
         <div className="space-y-4">
-          <section className="bg-paper border border-sand rounded-panel p-4">
+          <section className="panel p-4">
             <h2 className="text-[17px] font-semibold mb-3">Receipt</h2>
             {receipt ? (
               <div className="receipt-print border border-sand p-4 bg-paper">
@@ -164,7 +178,7 @@ export function SalesPage() {
             ) : <p className="text-[15px] text-ink-muted">Record a sale to see the receipt here.</p>}
           </section>
 
-          <section className="bg-paper border border-sand rounded-panel p-4">
+          <section className="panel p-4">
             <h2 className="text-[17px] font-semibold mb-3">Cash-up for today</h2>
             <div className="grid grid-cols-2 gap-3">
               <div><div className="text-[13px] text-ink-muted">Expected cash</div><div className="text-[20px] font-bold num">{fmtKES(expectedCash)}</div></div>
@@ -175,7 +189,7 @@ export function SalesPage() {
         </div>
       </div>
 
-      <section className="bg-paper border border-sand rounded-panel p-4">
+      <section className="panel p-4">
         <div className="flex flex-wrap gap-3 items-center mb-3">
           <h2 className="text-[17px] font-semibold">Sales list</h2>
           <div className="flex-1" />
@@ -183,16 +197,16 @@ export function SalesPage() {
         </div>
         {filtered.length === 0 ? <EmptyState title="No sales" body="Sales you record will appear here." /> : (
           <div className="overflow-x-auto">
-            <table className="w-full text-[15px] min-w-[720px]">
-              <thead><tr className="bg-cream-deep text-left"><th className="p-3">Receipt</th><th className="p-3">Date</th><th className="p-3">Customer</th><th className="p-3">Litres</th><th className="p-3">Total</th><th className="p-3">Method</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>
+            <table className="table-base min-w-[720px]">
+              <thead><tr><th>Receipt</th><th>Date</th><th>Customer</th><th>Litres</th><th>Total</th><th>Method</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 {[...filtered].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 40).map(s => (
-                  <tr key={s.id} className="border-t border-sand">
-                    <td className="p-3 num">{s.receiptNo}</td><td className="p-3">{fmtDate(s.date)}</td><td className="p-3">{s.customerName}</td>
-                    <td className="p-3 num">{fmtL(s.litres)}</td><td className="p-3 num">{fmtKES(s.total)}</td>
-                    <td className="p-3 capitalize">{s.paymentMethod}</td>
-                    <td className="p-3"><Badge tone={s.status === 'completed' ? 'success' : 'danger'}>{s.status}</Badge></td>
-                    <td className="p-3">{s.status === 'completed' && <button className="text-danger font-semibold min-h-[44px] px-2" onClick={() => setVoidSale(s)}>Void</button>}</td>
+                  <tr key={s.id}>
+                    <td className="num">{s.receiptNo}</td><td>{fmtDate(s.date)}</td><td>{s.customerName}</td>
+                    <td className="num">{fmtL(s.litres)}</td><td className="num">{fmtKES(s.total)}</td>
+                    <td className="capitalize">{s.paymentMethod}</td>
+                    <td><Badge tone={s.status === 'completed' ? 'success' : 'danger'}>{s.status}</Badge></td>
+                    <td>{s.status === 'completed' && <button className="text-danger font-semibold min-h-[44px] px-2" onClick={() => setVoidSale(s)}>Void</button>}</td>
                   </tr>
                 ))}
               </tbody>

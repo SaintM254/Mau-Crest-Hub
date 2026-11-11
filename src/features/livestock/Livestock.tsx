@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAsync, Button, Input, Select, Dialog, SearchBar, Pagination, EmptyState, Badge, Alert } from '../../components/ui';
+import { useAsync, Button, Input, Select, Dialog, SearchBar, Pagination, EmptyState, Badge, Alert, PageHeader } from '../../components/ui';
 import { api } from '../../api';
 import { fmtKES, fmtDate, ageYears, todayISO, uid } from '../../lib/utils';
 import { useSession } from '../../lib/store';
@@ -74,13 +74,15 @@ export function LivestockList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-[24px] font-bold">Livestock</h1>
-        <span className="text-[15px] text-ink-muted num">{total} animals</span>
-        <div className="flex-1" />
-        <Button variant="secondary" onClick={() => exportExcel('livestock', filtered.map(a => ({ Tag: a.tag, Name: a.name, Breed: a.breed, Group: a.group, Status: a.status })))}>Export current view</Button>
-        <Button onClick={openAdd}>Add animal</Button>
-      </div>
+      <PageHeader
+        title="Livestock"
+        subtitle="Every animal on the farm with breeding, milk and health records."
+        actions={<>
+          <span className="text-[15px] text-ink-muted num">{total} animals</span>
+          <Button variant="secondary" onClick={() => exportExcel('livestock', filtered.map(a => ({ Tag: a.tag, Name: a.name, Breed: a.breed, Group: a.group, Status: a.status })))}>Export current view</Button>
+          <Button onClick={openAdd}>Add animal</Button>
+        </>}
+      />
 
       <div className="grid md:grid-cols-4 gap-3">
         <SearchBar value={q} onChange={setQ} placeholder="Search by tag or name" />
@@ -92,21 +94,21 @@ export function LivestockList() {
       {pageRows.length === 0 ? (
         <EmptyState title="No animals found" body="Try a different search or filter, or add a new animal." action={<Button onClick={openAdd}>Add animal</Button>} />
       ) : (
-        <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-          <table className="w-full text-[15px] min-w-[720px]">
-            <thead><tr className="bg-cream-deep text-left">
-              <th className="p-3">Tag</th><th className="p-3">Name</th><th className="p-3">Breed</th><th className="p-3">Group</th><th className="p-3">Age</th><th className="p-3">Status</th><th className="p-3">Actions</th>
+        <div className="panel overflow-x-auto">
+          <table className="table-base min-w-[720px]">
+            <thead><tr>
+              <th>Tag</th><th>Name</th><th>Breed</th><th>Group</th><th>Age</th><th>Status</th><th>Actions</th>
             </tr></thead>
             <tbody>
               {pageRows.map(a => (
-                <tr key={a.id} className="border-t border-sand hover:bg-cream-deep/50">
-                  <td className="p-3"><span className="inline-flex items-center gap-2"><span className="w-8 h-8 rounded-input inline-flex items-center justify-center text-white text-[11px] font-bold" style={{ background: a.photoColor }}>{a.tag.slice(3)}</span><Link to={`/livestock/${a.id}`} className="text-forest font-semibold underline">{a.tag}</Link></span></td>
-                  <td className="p-3">{a.name}</td>
-                  <td className="p-3">{a.breed}</td>
-                  <td className="p-3 capitalize">{a.group}</td>
-                  <td className="p-3 num">{ageYears(a.dob)}</td>
-                  <td className="p-3"><Badge tone={a.status === 'active' ? 'success' : a.status === 'sold' ? 'info' : a.status === 'died' ? 'danger' : 'warning'}>{a.status}</Badge></td>
-                  <td className="p-3 whitespace-nowrap">
+                <tr key={a.id}>
+                  <td><span className="inline-flex items-center gap-2"><span className="w-8 h-8 rounded-input inline-flex items-center justify-center text-white text-[11px] font-bold" style={{ background: a.photoColor }}>{a.tag.slice(3)}</span><Link to={`/livestock/${a.id}`} className="text-forest font-semibold underline">{a.tag}</Link></span></td>
+                  <td>{a.name}</td>
+                  <td>{a.breed}</td>
+                  <td className="capitalize">{a.group}</td>
+                  <td className="num">{ageYears(a.dob)}</td>
+                  <td><Badge tone={a.status === 'active' ? 'success' : a.status === 'sold' ? 'info' : a.status === 'died' ? 'danger' : 'warning'}>{a.status}</Badge></td>
+                  <td className="whitespace-nowrap">
                     <button className="text-forest font-semibold min-h-[44px] px-2" onClick={() => openEdit(a)}>Edit</button>
                     {a.status === 'active' && <button className="text-forest font-semibold min-h-[44px] px-2" onClick={() => { setStatusDialog(a); setStatusForm({ status: 'sold', date: todayISO(), buyer: '', price: '', cause: '', dest: '', detail: '' }); }}>Change status</button>}
                   </td>
@@ -191,11 +193,24 @@ export function AnimalProfileInner({ id }: { id: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="w-14 h-14 rounded-panel inline-flex items-center justify-center text-white font-bold text-lg" style={{ background: a.photoColor }}>{a.tag.slice(3)}</span>
-        <div>
-          <h1 className="text-[24px] font-bold">{a.tag} — {a.name}</h1>
-          <p className="text-[15px] text-ink-muted">{a.breed} · {a.sex === 'F' ? 'Female' : 'Male'} · {ageYears(a.dob)} · <Badge tone={a.status === 'active' ? 'success' : 'info'}>{a.status}</Badge></p>
+      <div className="flex items-start gap-4 mb-5">
+        <span
+          className="w-14 h-14 rounded-panel inline-flex items-center justify-center shrink-0 text-cream font-bold text-lg border border-sand"
+          style={{ background: a.photoColor }}
+          aria-hidden="true"
+        >
+          {a.tag.slice(3)}
+        </span>
+        <div className="min-w-0">
+          <h1 className="page-title">{a.tag} — {a.name}</h1>
+          <p className="page-sub flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>{a.breed}</span>
+            <span aria-hidden="true">·</span>
+            <span>{a.sex === 'F' ? 'Female' : 'Male'}</span>
+            <span aria-hidden="true">·</span>
+            <span>{ageYears(a.dob)}</span>
+            <Badge tone={a.status === 'active' ? 'success' : 'info'}>{a.status}</Badge>
+          </p>
         </div>
       </div>
       <div className="flex gap-1 border-b border-sand overflow-x-auto" role="tablist">
@@ -205,7 +220,7 @@ export function AnimalProfileInner({ id }: { id: string }) {
       </div>
 
       {tab === 'overview' && (
-        <div className="bg-paper border border-sand rounded-panel p-4 grid md:grid-cols-2 gap-4 text-[15px]">
+        <div className="panel p-4 grid md:grid-cols-2 gap-4 text-[15px]">
           <div><div className="text-ink-muted text-[13px]">Date of birth</div><div>{fmtDate(a.dob)}</div></div>
           <div><div className="text-ink-muted text-[13px]">Group</div><div className="capitalize">{a.group}</div></div>
           <div><div className="text-ink-muted text-[13px]">Mother</div><div>{a.motherTag || '—'}</div></div>
@@ -217,11 +232,11 @@ export function AnimalProfileInner({ id }: { id: string }) {
         </div>
       )}
       {tab === 'milk' && (
-        <div className="bg-paper border border-sand rounded-panel p-4">
+        <div className="panel p-4">
           <h2 className="text-[17px] font-semibold mb-3">Last 30 days</h2>
           {myCow.length === 0 ? <p className="text-[15px] text-ink-muted">No milk records for this animal yet.</p> : (
-            <table className="w-full text-[15px]"><thead><tr className="bg-cream-deep text-left"><th className="p-2">Date</th><th className="p-2">Litres</th></tr></thead>
-            <tbody>{myCow.map(c => { const m = data.milk.find(x => x.id === c.milkId); return <tr key={c.id} className="border-t border-sand"><td className="p-2">{m ? fmtDate(m.date) + ' (' + m.session + ')' : '—'}</td><td className="p-2 num">{c.litres.toFixed(1)} L</td></tr>; })}</tbody></table>
+            <table className="table-base"><thead><tr><th>Date</th><th>Litres</th></tr></thead>
+            <tbody>{myCow.map(c => { const m = data.milk.find(x => x.id === c.milkId); return <tr key={c.id}><td>{m ? fmtDate(m.date) + ' (' + m.session + ')' : '—'}</td><td className="p-2 num">{c.litres.toFixed(1)} L</td></tr>; })}</tbody></table>
           )}
         </div>
       )}
@@ -229,7 +244,7 @@ export function AnimalProfileInner({ id }: { id: string }) {
         <div className="space-y-3">
           <Button onClick={() => setBOpen(true)}>Add breeding event</Button>
           {data.breeding.map(b => (
-            <div key={b.id} className="bg-paper border border-sand rounded-panel p-4 text-[15px] flex flex-wrap gap-3">
+            <div key={b.id} className="panel p-4 text-[15px] flex flex-wrap gap-3">
               <Badge tone="info">{b.type}</Badge><span>{fmtDate(b.date)}</span>
               {b.sire && <span>Sire: {b.sire}</span>}{b.method && <span>Method: {b.method}</span>}
               {b.result && <span>Result: {b.result}</span>}{b.expectedCalving && <span>Expected calving: {fmtDate(b.expectedCalving)}</span>}
@@ -239,14 +254,14 @@ export function AnimalProfileInner({ id }: { id: string }) {
         </div>
       )}
       {tab === 'health' && (
-        <div className="bg-paper border border-sand rounded-panel p-4">
+        <div className="panel p-4">
           {data.health.length === 0 ? <p className="text-[15px] text-ink-muted">No health records for this animal.</p> : (
             <ul className="divide-y divide-sand">{data.health.map(h => <li key={h.id} className="py-2 text-[15px] flex flex-wrap gap-2"><Badge tone="neutral">{h.type}</Badge><span>{h.product}</span><span className="text-ink-muted">{fmtDate(h.date)}</span>{h.withdrawalEnd && <Badge tone="warning">Withdrawal to {fmtDate(h.withdrawalEnd)}</Badge>}</li>)}</ul>
           )}
         </div>
       )}
       {tab === 'history' && (
-        <div className="bg-paper border border-sand rounded-panel p-4 text-[15px]">
+        <div className="panel p-4 text-[15px]">
           <p>Last edited by {a.updatedBy}, {fmtDate(a.updatedAt)}</p>
           <p className="text-ink-muted mt-1">Full audit history for this animal is in the Audit log.</p>
         </div>

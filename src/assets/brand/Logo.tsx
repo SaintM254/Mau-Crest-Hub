@@ -8,13 +8,23 @@ export function LogoMark({ size = 40 }: { size?: number }) {
   );
 }
 
-export function LogoWithText({ dark = false }: { dark?: boolean }) {
+export function LogoWithText({
+  dark = false,
+  compact = false
+}: { dark?: boolean; compact?: boolean }) {
+  if (compact) {
+    return <LogoMark size={36} />;
+  }
   return (
-    <div className="flex items-center gap-3">
-      <LogoMark size={40} />
-      <div>
-        <div className={`text-lg font-bold leading-tight ${dark ? 'text-cream' : 'text-forest'}`}>Mau Crest Hub</div>
-        <div className={`text-xs ${dark ? 'text-cream/80' : 'text-ink-muted'}`}>Nurtured by Nature, Delivered Fresh</div>
+    <div className="flex items-center gap-3 min-w-0">
+      <LogoMark size={38} />
+      <div className="min-w-0">
+        <div className={`text-[17px] font-bold leading-tight truncate ${dark ? 'text-cream' : 'text-forest'}`}>
+          Mau Crest Hub
+        </div>
+        <div className={`text-[13px] leading-snug ${dark ? 'text-cream/75' : 'text-ink-muted'}`}>
+          Nurtured by Nature, Delivered Fresh
+        </div>
       </div>
     </div>
   );

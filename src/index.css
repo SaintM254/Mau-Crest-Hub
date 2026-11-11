@@ -48,6 +48,57 @@ body {
 @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 .skeleton-pulse { animation: pulse-soft 1.6s ease-in-out infinite; }
 
+@layer components {
+  /* Panels */
+  .panel {
+    @apply bg-paper border border-sand rounded-panel;
+  }
+  .panel-pad {
+    @apply panel p-4 md:p-5;
+  }
+  .panel-header {
+    @apply flex items-start justify-between gap-3 mb-4;
+  }
+  .panel-title {
+    @apply text-[17px] font-semibold text-ink;
+  }
+  .panel-sub {
+    @apply text-[13px] text-ink-muted mt-0.5;
+  }
+
+  /* Tables */
+  .table-wrap {
+    @apply panel overflow-x-auto;
+  }
+  .table-base {
+    @apply w-full text-[15px] border-collapse;
+  }
+  .table-base thead th {
+    @apply bg-cream-deep text-ink-muted text-[13px] font-semibold text-left px-3 py-2.5
+           border-b border-sand whitespace-nowrap align-middle;
+  }
+  .table-base tbody td {
+    @apply px-3 py-3 border-b border-sand align-middle;
+  }
+  .table-base tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .table-base tbody tr:hover {
+    @apply bg-cream-deep/50;
+  }
+
+  /* Page skeleton */
+  .page-title {
+    @apply text-[24px] font-bold text-ink leading-tight;
+  }
+  .page-sub {
+    @apply text-[15px] text-ink-muted mt-1 max-w-[70ch];
+  }
+  .section-title {
+    @apply text-[17px] font-semibold text-ink;
+  }
+}
+
 @media print {
   .no-print { display: none !important; }
   body { background: #fff; }

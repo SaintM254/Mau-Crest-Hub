@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { useAsync, Button, Input, Select, Dialog, EmptyState, SearchBar, FileDropzone } from '../../components/ui';
+import { CartesianGrid, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Panel, useAsync, Button, Input, Select, Dialog, EmptyState, SearchBar, FileDropzone, PageHeader } from '../../components/ui';
 import { api } from '../../api';
 import { fmtKES, fmtDate, sum, todayISO } from '../../lib/utils';
 import { useSession } from '../../lib/store';
@@ -29,35 +29,43 @@ export function ExpensesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-[24px] font-bold">Expenses</h1>
-        <span className="text-[15px] text-ink-muted num">Total: {fmtKES(total)}</span>
-        <div className="flex-1" />
-        <Button variant="secondary" onClick={() => exportExcel('expenses', filtered.map(e => ({ Date: e.date, Category: e.category, Supplier: e.supplier, Amount: e.amount })))}>Export</Button>
-        <Button onClick={() => setOpen(true)}>Add expense</Button>
-      </div>
+      <PageHeader
+        title="Expenses"
+        subtitle="Farm spending by category and supplier."
+        actions={<>
+          <span className="text-[15px] text-ink-muted num">Total: {fmtKES(total)}</span>
+          <Button variant="secondary" onClick={() => exportExcel('expenses', filtered.map(e => ({ Date: e.date, Category: e.category, Supplier: e.supplier, Amount: e.amount })))}>Export</Button>
+          <Button onClick={() => setOpen(true)}>Add expense</Button>
+        </>}
+      />
       <div className="grid md:grid-cols-2 gap-3">
         <SearchBar value={q} onChange={setQ} placeholder="Search supplier or category" />
         <Select value={cat} onChange={(e) => setCat(e.target.value)} options={[{ value: 'all', label: 'All categories' }, ...CATS.map(c => ({ value: c, label: c }))]} />
       </div>
-      <section className="bg-paper border border-sand rounded-panel p-4">
-        <h2 className="text-[17px] font-semibold mb-3">Spending by category</h2>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={byCat}>
-            <XAxis dataKey="category" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} />
-            <Tooltip />
-            <Bar dataKey="amount" fill="#1F4D2E" />
-          </BarChart>
-        </ResponsiveContainer>
-      </section>
+      <Panel title="Spending by category" subtitle="Totals for the current filter">
+        <div className="-ml-2">
+          <ResponsiveContainer width="100%" height={210}>
+            <BarChart data={byCat} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+              <CartesianGrid stroke="rgb(var(--sand))" vertical={false} />
+              <XAxis dataKey="category" tick={{ fontSize: 11, fill: 'rgb(var(--ink-muted))' }} tickLine={false} axisLine={{ stroke: 'rgb(var(--sand))' }} />
+              <YAxis tick={{ fontSize: 11, fill: 'rgb(var(--ink-muted))' }} tickLine={false} axisLine={false} width={56} tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`} />
+              <Tooltip
+                contentStyle={{ background: 'rgb(var(--paper))', border: '1px solid rgb(var(--sand))', borderRadius: 10, fontSize: 13 }}
+                labelStyle={{ color: 'rgb(var(--ink))', fontWeight: 600 }}
+                formatter={(v: number) => [fmtKES(v), 'Spent']}
+              />
+              <Bar dataKey="amount" fill="rgb(var(--forest))" radius={[3, 3, 0, 0]} maxBarSize={44} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </Panel>
       {filtered.length === 0 ? <EmptyState title="No expenses" body="Add your first expense to track profit and loss." action={<Button onClick={() => setOpen(true)}>Add expense</Button>} /> : (
-        <div className="bg-paper border border-sand rounded-panel overflow-x-auto">
-          <table className="w-full text-[15px] min-w-[720px]">
-            <thead><tr className="bg-cream-deep text-left"><th className="p-3">Date</th><th className="p-3">Category</th><th className="p-3">Supplier</th><th className="p-3">Amount</th><th className="p-3">Method</th></tr></thead>
+        <div className="panel overflow-x-auto">
+          <table className="table-base min-w-[720px]">
+            <thead><tr><th>Date</th><th>Category</th><th>Supplier</th><th>Amount</th><th>Method</th></tr></thead>
             <tbody>
               {[...filtered].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 60).map(e => (
-                <tr key={e.id} className="border-t border-sand"><td className="p-3">{fmtDate(e.date)}</td><td className="p-3">{e.category}</td><td className="p-3">{e.supplier}</td><td className="p-3 num">{fmtKES(e.amount)}</td><td className="p-3 capitalize">{e.paymentMethod}</td></tr>
+                <tr key={e.id}><td>{fmtDate(e.date)}</td><td>{e.category}</td><td>{e.supplier}</td><td className="num">{fmtKES(e.amount)}</td><td className="capitalize">{e.paymentMethod}</td></tr>
               ))}
             </tbody>
           </table>
